@@ -1,93 +1,300 @@
 # openlab_ss26
 
+Repository for the CERN Openlab Summer Student 2026 project:
 
+**NGT WP3 Representation Learning for LHC Triggers**
 
-## Getting started
+The project studies machine-learning representations of simulated LHC collision
+events for Level-1 trigger and anomaly-detection workflows. The main objective
+is to learn compact latent spaces where Standard Model processes cluster in a
+physically meaningful way while preserving sensitivity to rare or anomalous
+signatures.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+Project notes and meeting context are tracked in the CERN CodiMD page:
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+- <https://codimd.web.cern.ch/s/oEeoJz7QJ>
 
-## Add your files
+## Scientific Context
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+Collider events are represented as unordered sets of reconstructed or trigger
+objects:
 
+```text
+X in R^(N_particles x N_features)
 ```
-cd existing_repo
-git remote add origin https://gitlab.cern.ch/cms-l1-ad/openlab_ss26.git
-git branch -M master
-git push -uf origin master
+
+The current work focuses on particle-level L1 trigger candidates from the
+Collide-2V / Collide-1M dataset, using features such as:
+
+- transverse momentum: `pt`
+- pseudorapidity: `eta`
+- azimuthal angle: `phi`
+- transverse impact parameter / displacement proxy: `dxy` or `D0`
+- particle identifier: `pdgId` / `PID`
+
+The project evaluates how different representation-learning strategies and
+model scales affect downstream classification and anomaly-detection behavior.
+
+## Repository Layout
+
+```text
+.
+├── README.md
+└── ctl2_embedding_model/
+    ├── NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb
+    ├── 2WEEK_Run100K.md
+    ├── .gitlab-ci.yml
+    ├── ctl2_model/
+    │   ├── conf/
+    │   ├── data/
+    │   ├── src/ctl2_model/
+    │   └── tests/
+    └── ngt_linformer_nodes_aligned_outputs/
+        └── runs/
 ```
 
-## Integrate with your tools
+### `ctl2_embedding_model/`
 
-* [Set up project integrations](https://gitlab.cern.ch/cms-l1-ad/openlab_ss26/-/settings/integrations)
+Main project workspace for the CTL2 / L1 particle-level representation-learning
+studies.
 
-## Collaborate with your team
+Important files:
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+- `NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb`:
+  main notebook used for the NGT Linformer experiments on Collide-2V classes.
+- `2WEEK_Run100K.md`:
+  run notes and analysis summary for the first 1k and 100k event studies.
+- `ctl2_model/`:
+  Kedro-style project with reusable preprocessing, model, training,
+  validation, plotting, anomaly-score, and synthesis code.
+- `ngt_linformer_nodes_aligned_outputs/runs/`:
+  saved run artifacts, figures, summaries, and model outputs.
 
-## Test and Deploy
+Raw cached tensors are intentionally excluded from Git:
 
-Use the built-in continuous integration in GitLab.
+```text
+ctl2_embedding_model/ngt_linformer_nodes_aligned_outputs/cache/
+```
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+## Dataset
 
-***
+The project uses the public Collide-1M / Collide-2V dataset:
 
-# Editing this README
+- Hugging Face dataset:
+  <https://huggingface.co/datasets/fastmachinelearning/collide-1m>
+- Example notebook:
+  <https://huggingface.co/datasets/fastmachinelearning/collide-1m/blob/main/COLLIDE2V_example_notebook.ipynb>
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+Current experiments use four classes:
 
-## Suggestions for a good README
+- `MinBias`
+- `top`
+- `QCD`
+- `DY`
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+The main notebook loads class-specific samples, builds a fixed
+`N_CONSTITUENTS x N_FEATURES` tensor, normalizes features from the training
+split only, builds a PID mapping from the training split only, and trains a
+full-precision Linformer-style classifier/embedding model.
 
-## Name
-Choose a self-explaining name for your project.
+## Current Model Workflow
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+The current baseline is a full-precision PyTorch analogue of the quantized /
+HGQ Linformer model in `ctl2_model`.
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+High-level architecture:
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+```text
+particle features
+  -> input projection
+  -> Linformer attention block
+  -> residual
+  -> Linformer attention block
+  -> residual
+  -> event pooling
+  -> dense projection
+  -> latent embedding
+  -> classifier head
+```
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+The notebook evaluates:
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+- raw and preprocessed feature distributions
+- multiclass classification performance
+- latent-space PCA visualizations
+- Mahalanobis anomaly scores using MinBias as the normal class
+- DY vs MinBias diagnostic features and separability checks
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+## Main Runs Included
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+### 1k events per class smoke test
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+Purpose:
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+- verify end-to-end loading, preprocessing, training, embedding extraction, and
+  anomaly scoring
+- check alignment with the `ctl2_model` preprocessing and Linformer structure
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+Key result:
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+- the pipeline works end to end
+- `top` and `qcd` are reasonably separable
+- DY is strongly confused with MinBias
 
-## License
-For open source projects, say how it is licensed.
+### 100k events per class baseline
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+Purpose:
+
+- production-scale NGT run requested in the first project meetings
+- test whether DY-MinBias confusion disappears with more data
+
+Key result:
+
+- global accuracy improves relative to the 1k smoke test
+- `top` and `qcd` improve
+- DY-MinBias confusion persists, indicating that the issue is not simply sample
+  size
+
+### Wide attention + phi augmentation run
+
+Purpose:
+
+- test whether additional model capacity, attention pooling, and phi-rotation
+  augmentation improve DY-MinBias separability
+
+Key result:
+
+- DY recall improves substantially
+- MinBias becomes more frequently misclassified as DY
+- the model changes the decision boundary but does not fully separate the two
+  classes
+
+## Current Physics / ML Findings
+
+The central open problem is the separability of `DY` and `MinBias`.
+
+Observed behavior:
+
+- Scaling from 1k to 100k events does not solve DY -> MinBias confusion.
+- Increasing model capacity and adding attention pooling improves DY recall,
+  but introduces significant MinBias -> DY confusion.
+- Mahalanobis scores separate `top` clearly and `qcd` partially, but typical
+  DY events remain close to MinBias in the latent space.
+- Simple event-level diagnostic features such as lepton multiplicity, photon
+  multiplicity, scalar `pt` summaries, and approximate opposite-sign
+  same-flavor lepton-pair mass provide only weak DY-MinBias separation.
+
+Working interpretation:
+
+- The limitation is likely not only model capacity.
+- DY and MinBias may be weakly separable with the current L1 particle features,
+  or the current representation may be missing explicit event-level physics
+  observables.
+
+## Next Analysis Questions
+
+Questions to clarify with supervisors:
+
+- Should DY be expected to separate cleanly from MinBias using only the current
+  L1 particle-level features?
+- Do many DY events lack visible L1 electron or muon candidates after the
+  current preprocessing?
+- Should the model include explicit event-level observables such as:
+  - lepton counts
+  - photon counts
+  - scalar `sum_pt` / `HT`
+  - leading-object `pt`
+  - approximate dilepton mass
+  - opposite-sign same-flavor pair counts
+  - isolation-like summaries
+- Should DY be split into subcategories, for example visible-lepton DY vs
+  low-activity DY?
+- Should DY-MinBias be studied as a dedicated binary task before expanding to
+  additional physics classes?
+- Would a contrastive or auxiliary loss help force latent separation between
+  DY and MinBias?
+
+## Running Locally
+
+The notebook is designed primarily for NGT / Linux execution, but the smaller
+1k-event configuration can be used for local smoke tests.
+
+From the repository root:
+
+```bash
+cd ctl2_embedding_model
+```
+
+Open:
+
+```text
+NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb
+```
+
+For local debugging, set in the notebook:
+
+```python
+N_EVENTS_PER_CLASS = 1_000
+NUM_WORKERS = 0
+```
+
+For NGT production-scale runs:
+
+```python
+N_EVENTS_PER_CLASS = 100_000
+NUM_WORKERS = 4
+```
+
+The raw tensor cache is written under:
+
+```text
+ctl2_embedding_model/ngt_linformer_nodes_aligned_outputs/cache/
+```
+
+This directory is ignored by Git because it contains large regenerated data
+artifacts.
+
+## Kedro Project
+
+Reusable project code is under:
+
+```text
+ctl2_embedding_model/ctl2_model/
+```
+
+Useful subdirectories:
+
+- `src/ctl2_model/models/`
+- `src/ctl2_model/pipelines/data_processing/`
+- `src/ctl2_model/pipelines/model_training/`
+- `src/ctl2_model/pipelines/model_validation/`
+- `src/ctl2_model/evaluation/`
+- `src/ctl2_model/utils/`
+
+The notebook currently mirrors important parts of this code in full precision
+to support direct NGT notebook development and comparison against the original
+pipeline.
+
+## Infrastructure
+
+The project targets the CERN NGT infrastructure:
+
+- PyTorch for model development
+- NGT / Kubeflow notebooks for GPU execution
+- GitLab for version control and CI
+- MLflow planned for experiment tracking and model management
+
+## Project Status
+
+Current status:
+
+- end-to-end Collide-2V Linformer workflow implemented
+- 1k and 100k event studies completed
+- wide attention + augmentation experiment completed
+- DY-MinBias separability identified as the main bottleneck
+
+Immediate next step:
+
+- enrich the representation with stronger event-level physics observables or
+  dedicated DY-MinBias objectives, then compare against the current
+  `wide_attn_aug` run.
