@@ -42,7 +42,8 @@ model scales affect downstream classification and anomaly-detection behavior.
 ├── README.md
 └── ctl2_embedding_model/
     ├── NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb
-    ├── 2WEEK_Run100K.md
+    ├── Run_Baseline_1k_100k.md
+    ├── Run_DYMinBias_Followups.md
     ├── .gitlab-ci.yml
     ├── ctl2_model/
     │   ├── conf/
@@ -62,8 +63,14 @@ Important files:
 
 - `NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb`:
   main notebook used for the NGT Linformer experiments on Collide-2V classes.
-- `2WEEK_Run100K.md`:
-  run notes and analysis summary for the first 1k and 100k event studies.
+- `Run_Baseline_1k_100k.md`:
+  run notes and analysis summary for the first 1k and 100k baseline studies.
+- `Run_DYMinBias_Followups.md`:
+  follow-up notes for the wide-attention augmentation and 300k MinBias L1-only
+  studies.
+- `Run_2026-07-06_TopPt_EtaFix_Analysis.md`:
+  analysis of the eta-gap preprocessing fix and the three corrected top-pT
+  runs performed on July 6, 2026.
 - `ctl2_model/`:
   Kedro-style project with reusable preprocessing, model, training,
   validation, plotting, anomaly-score, and synthesis code.
@@ -298,3 +305,17 @@ Immediate next step:
 - enrich the representation with stronger event-level physics observables or
   dedicated DY-MinBias objectives, then compare against the current
   `wide_attn_aug` run.
+
+Planned follow-up run:
+
+- `EXPERIMENT_PRESET = "minbias300k_l1_mean_no_aug"`
+- load `300k` MinBias events and `100k` events for each other class
+- use L1 candidate columns only, with FullReco fallbacks disabled
+- use mean pooling instead of attention pooling
+- keep validation and evaluation balanced across classes
+- use balanced class weights during training to avoid learning only the
+  increased MinBias prior
+
+This run is meant to test whether a better-sampled MinBias normal class helps
+the model learn MinBias-specific structure without relying on additional
+non-L1 features.
