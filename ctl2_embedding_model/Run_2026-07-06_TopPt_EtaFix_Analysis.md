@@ -124,18 +124,37 @@ The feature importances are small, which supports the conclusion that DY and Min
 5. Attention pooling and augmentation did not solve the DY-MinBias overlap. It slightly improved global accuracy but reduced DY recall from 6.0% to 5.1%.
 6. The latent-space Mahalanobis scores confirm that DY and MinBias remain highly overlapping.
 
-## Recommended Next Steps
+## Next Steps and Open Questions
 
-1. Keep `top_pt` candidate selection for all future runs.
-2. Treat all pre-`top_pt` runs as diagnostic only, not as final baselines.
-3. Try a targeted DY-MinBias strategy instead of only increasing global model capacity:
-   - class weighting or focal loss for DY,
-   - a dedicated binary DY-vs-MinBias head,
-   - oversampling DY or balancing DY-MinBias hard examples,
-   - explicit monitoring of DY recall as a model-selection metric.
-4. Revisit L1-only discriminating features for DY:
-   - lepton-like candidate counts,
-   - high-pT charged candidates,
-   - photon-like activity,
-   - event-level pT tails.
-5. If running wide attention again, consider early stopping because the best validation loss occurred at epoch 4.
+### 1. Targeted DY-MinBias Strategy
+
+The current results suggest that simply increasing the global model capacity is not enough to solve the DY-MinBias overlap. A more targeted strategy could be tested, for example:
+
+- Apply class weighting or focal loss to give more importance to DY misclassification.
+- Add a dedicated binary DY-vs-MinBias classification head.
+- Oversample DY events or construct balanced DY-MinBias hard-example batches.
+- Use DY recall, DY F1, and DY -> MinBias confusion as explicit model-selection metrics, instead of relying only on global validation accuracy.
+
+**Question:** Should the next run prioritize improving DY recall, even if this slightly reduces MinBias purity or global accuracy?
+
+### 2. Revisit L1-Only Discriminating Features
+
+The current L1-only representation may not contain enough discriminating information for DY vs MinBias, or the model may not be using it effectively. Features worth reviewing include:
+
+- Lepton-like candidate counts.
+- High-pT charged candidates.
+- Photon-like activity.
+- Event-level pT tails.
+- Charge/PID composition of the leading L1 candidates.
+
+**Question:** Are there additional L1-level quantities that should be included to better capture the DY topology?
+
+### 3. Training and Model-Selection Strategy
+
+The wide attention + augmentation run reached its best validation loss around epoch 4, while later epochs did not improve DY separation. This suggests that early stopping or a DY-focused validation criterion may be useful.
+
+- Add early stopping based on validation loss.
+- Track DY recall and DY -> MinBias confusion during validation.
+- Save the best checkpoint using a DY-focused metric, not only validation loss.
+
+**Question:** Should I select the best model based on DY recall/F1 rather than overall validation loss?
