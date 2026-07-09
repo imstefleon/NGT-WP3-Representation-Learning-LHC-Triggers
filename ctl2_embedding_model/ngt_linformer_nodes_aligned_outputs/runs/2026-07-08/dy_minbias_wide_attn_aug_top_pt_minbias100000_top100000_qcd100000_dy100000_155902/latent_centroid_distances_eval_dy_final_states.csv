@@ -1,0 +1,16 @@
+group_a,group_b,latent_centroid_distance
+DY->ee,DY->mumu,0.10278140008449554
+DY->ee,minbias,0.2978810966014862
+DY->mumu,minbias,0.39115241169929504
+DY->ee,DY->tautau,0.6398382782936096
+DY->tautau,minbias,0.6566414833068848
+DY->mumu,DY->tautau,0.697632372379303
+DY->tautau,qcd,3.72019100189209
+DY->ee,qcd,4.336760997772217
+minbias,qcd,4.363037109375
+DY->mumu,qcd,4.372315406799316
+qcd,top,7.333835124969482
+DY->tautau,top,9.527127265930176
+DY->ee,top,9.887195587158203
+DY->mumu,top,9.900341033935547
+minbias,top,9.994128227233887
