@@ -68,9 +68,12 @@ Important files:
 - `Run_DYMinBias_Followups.md`:
   follow-up notes for the wide-attention augmentation and 300k MinBias L1-only
   studies.
-- `Run_2026-07-06_TopPt_EtaFix_Analysis.md`:
+- `Run_TopPt_EtaFix_Analysis.md`:
   analysis of the eta-gap preprocessing fix and the three corrected top-pT
   runs performed on July 6, 2026.
+- `Run_DY_MinBias_Latent_Analysis.md`:
+  analysis of the DY-MinBias latent-space overlap, including the DY gen-level
+  final-state split into `ee`, `mumu`, and `tautau`.
 - `ctl2_model/`:
   Kedro-style project with reusable preprocessing, model, training,
   validation, plotting, anomaly-score, and synthesis code.
@@ -109,19 +112,53 @@ full-precision Linformer-style classifier/embedding model.
 The current baseline is a full-precision PyTorch analogue of the quantized /
 HGQ Linformer model in `ctl2_model`.
 
-High-level architecture:
+Current wide-attention architecture:
 
-```text
-particle features
-  -> input projection
-  -> Linformer attention block
-  -> residual
-  -> Linformer attention block
-  -> residual
-  -> event pooling
-  -> dense projection
-  -> latent embedding
-  -> classifier head
+```mermaid
+flowchart TD
+    A["Input event<br/>100 L1 candidates x 24 features"] --> B["Valid mask<br/>candidate != 0"]
+
+    A --> C["Input projection<br/>Linear 24 -> 64 + ReLU"]
+
+    C --> D["Linformer Attention block 1<br/>dim=64, heads=4, proj_k=16"]
+    D --> E["Residual add<br/>attention1 + input projection"]
+
+    E --> F["Linformer Attention block 2<br/>dim=64, heads=4, proj_k=16"]
+    F --> G["Residual add<br/>attention2 + previous residual"]
+
+    G --> H["Attention pooling<br/>Linear 64 -> 32 -> 1<br/>softmax over valid candidates"]
+    B --> H
+
+    H --> I["Post-pooling MLP<br/>Linear 64 -> 64 + ReLU<br/>Linear 64 -> 64 + ReLU"]
+
+    I --> J["Latent embedding<br/>Linear 64 -> 24"]
+
+    J --> K["Classifier hidden<br/>Linear 24 -> 64 + ReLU"]
+
+    K --> L["Class logits<br/>Linear 64 -> 4"]
+
+    L --> M["Output classes<br/>MinBias / Top / QCD / DY"]
+
+    J --> N["Latent-space analysis<br/>PCA, Mahalanobis, centroid distances,<br/>DY final-state separation"]
+```
+
+Conceptual workflow:
+
+```mermaid
+flowchart LR
+    A["L1 candidates"] --> B["Feature preprocessing"]
+    B --> C["Top-pT candidate selection"]
+    C --> D["Linformer encoder"]
+    D --> E["Attention pooling"]
+    E --> F["Latent space"]
+    F --> G["Classifier"]
+    G --> H["Physics class prediction"]
+
+    F --> I["Latent analysis"]
+    I --> J["PCA"]
+    I --> K["Mahalanobis score"]
+    I --> L["DY-MinBias separation"]
+    I --> M["DY final states<br/>ee / mumu / tautau"]
 ```
 
 The notebook evaluates:
