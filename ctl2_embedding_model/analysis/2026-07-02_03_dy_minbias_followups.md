@@ -1,10 +1,10 @@
-# Follow-up Runs: DY-MinBias, Attention, and 300k MinBias L1
+# 2026-07-02 and 2026-07-03 DY-MinBias Follow-up Runs [HF Collide-2V]
 
 Notebook:
 
-[`NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb`](NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb)
+`NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb`
 
-Context:
+## Context
 
 After the 1k and 100k baseline runs, the main problem was the confusion between:
 
@@ -12,13 +12,17 @@ After the 1k and 100k baseline runs, the main problem was the confusion between:
 DY <-> MinBias
 ```
 
-This document summarizes the follow-up runs focused on understanding and
-addressing that issue.
+This document summarizes the follow-up runs focused on understanding and addressing that issue.
 
-## 1. DY vs MinBias Diagnostic With Aggregated Features
+Dataset source:
 
-Before changing the model, a binary diagnostic was built using event-level
-aggregated features:
+```text
+HF Collide-2V / parquet dataset path used by the original notebook loader
+```
+
+## DY vs MinBias Diagnostic With Aggregated Features
+
+Before changing the model, a binary diagnostic was built using event-level aggregated features:
 
 - `n_lep`
 - `n_mu`
@@ -47,13 +51,11 @@ ROC AUC ~= 0.61
 
 Interpretation:
 
-- Even with simple aggregated variables, DY and MinBias are only weakly
-  separable.
+- Even with simple aggregated variables, DY and MinBias are only weakly separable.
 - This suggests that the issue is not only the final classifier layer.
-- Explicit discriminating information may be missing from the current L1
-  representation.
+- Explicit discriminating information may be missing from the current L1 representation.
 
-## 2. Wide Attention + Phi Augmentation Run
+## Wide Attention + Phi Augmentation Run
 
 Run:
 
@@ -63,8 +65,7 @@ ngt_linformer_nodes_aligned_outputs/runs/2026-07-02/dy_minbias_wide_attn_aug_n10
 
 Motivation:
 
-Test whether more model capacity, attention pooling, and data augmentation help
-recover DY.
+Test whether more model capacity, attention pooling, and data augmentation help recover DY.
 
 Configuration:
 
@@ -114,8 +115,7 @@ DY F1:     0.26 -> 0.55
 Interpretation:
 
 - The model no longer collapses almost all DY events into MinBias.
-- However, the decision boundary shifts, and many MinBias events are now
-  classified as DY.
+- However, the decision boundary shifts, and many MinBias events are now classified as DY.
 - The run improves DY recovery, but it does not produce a clean separation.
 
 ### Mahalanobis
@@ -134,7 +134,7 @@ Reading:
 - The median `dy` score is still almost identical to MinBias.
 - The latent space still does not clearly separate DY and MinBias.
 
-## 3. 300k MinBias L1 Mean No Aug Run
+## 300k MinBias L1 Mean No-Aug Run
 
 Run:
 
@@ -144,8 +144,7 @@ ngt_linformer_nodes_aligned_outputs/runs/2026-07-03/minbias300k_l1_mean_no_aug_m
 
 Motivation:
 
-Test whether a larger MinBias sample helps the model learn the structure of the
-normal class and improves separation from DY.
+Test whether a larger MinBias sample helps the model learn the structure of the normal class and improves separation from DY.
 
 Configuration:
 
@@ -220,7 +219,7 @@ Reading:
 - `dy` still has a median almost identical to MinBias.
 - The latent space still does not clearly separate DY-MinBias.
 
-## 4. Follow-up Run Comparison
+## Follow-up Run Comparison
 
 | Metric | wide_attn_aug | 300k MinBias L1 mean |
 |---|---:|---:|
@@ -234,57 +233,17 @@ Reading:
 | F1 top | 0.945 | 0.941 |
 | F1 qcd | 0.831 | 0.827 |
 
-## 5. Follow-up Conclusion
+## Conclusion
 
 The follow-up runs show that:
 
-- Increasing capacity + attention pooling + augmentation improves DY, but causes
-  more MinBias -> DY confusion.
-- Using 300k MinBias in L1-only mode improves DY recall even further, but
-  strongly degrades MinBias performance.
-- In both cases, Mahalanobis shows that the median DY score remains almost the
-  same as MinBias.
-- Therefore, the problem is not solved: the decision boundary has mostly shifted.
+- Increasing capacity, attention pooling, and augmentation improves DY, but causes more MinBias -> DY confusion.
+- Using 300k MinBias in L1-only mode improves DY recall further, but strongly degrades MinBias performance.
+- In both cases, Mahalanobis shows that the median DY score remains almost the same as MinBias.
+- The problem is not solved: the decision boundary has mostly shifted.
 
 Main conclusion:
 
 ```text
 DY and MinBias remain strongly overlapping with the current L1 features.
 ```
-
-## 6. Recommended Next Steps
-
-It does not seem sufficient to keep increasing only the number of MinBias events.
-
-Recommended next tests:
-
-1. L1-only run with explicit aggregated features:
-   - `n_lep`
-   - `n_gamma`
-   - `sum_pt`
-   - leading `pt`
-   - OS/SF pairs
-   - approximate dilepton mass
-   - isolation-like variables
-
-2. Dedicated binary run:
-
-```text
-DY vs MinBias
-```
-
-3. Compare 300k MinBias with and without class weights:
-
-```text
-300k MinBias + balanced class weights
-300k MinBias without class weights
-```
-
-4. Consider an auxiliary loss or contrastive loss to explicitly separate DY and
-   MinBias in the latent space.
-
-5. Check whether DY should be split into subcategories:
-   - DY with visible L1 leptons
-   - DY without visible L1 leptons
-   - low-activity DY
-   - high-pt DY

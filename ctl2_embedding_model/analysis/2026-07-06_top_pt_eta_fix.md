@@ -1,8 +1,14 @@
-# July 6, 2026 Top-pT Eta Fix Run Analysis
+# 2026-07-06 Top-pT Eta Fix Run Analysis [HF Collide-2V]
 
 ## Context
 
 Sabrina pointed out that the raw `eta` distribution looked unphysical, with a strong peak around `eta = [-5, -4]` and a gap around `[-4, -2.5]`.
+
+Dataset source:
+
+```text
+HF Collide-2V / parquet dataset path used by the original notebook loader
+```
 
 The source of the problem was not the plotting configuration. The input tensor builder was taking the first 100 L1 candidates from the parquet arrays:
 
@@ -35,7 +41,7 @@ The corrected 100k caches now show a physical eta coverage across `[-5, 5]`. The
 
 Conclusion: the eta gap was an artifact of candidate selection, and the `top_pt` fix removed it.
 
-## Runs Performed Today
+## Runs Performed
 
 All runs below used L1-only features and the corrected top-pT candidate selection.
 
@@ -119,42 +125,7 @@ The feature importances are small, which supports the conclusion that DY and Min
 
 1. The eta gap was caused by first-100 candidate truncation and was fixed by selecting the top 100 candidates by `pT`.
 2. The corrected `eta` distributions now look physically reasonable.
-3. The corrected 100k baseline is the new reliable reference point.
+3. The corrected 100k baseline is the reliable reference point for later comparisons.
 4. DY remains the main failure mode: most DY events are still predicted as MinBias.
 5. Attention pooling and augmentation did not solve the DY-MinBias overlap. It slightly improved global accuracy but reduced DY recall from 6.0% to 5.1%.
 6. The latent-space Mahalanobis scores confirm that DY and MinBias remain highly overlapping.
-
-## Next Steps and Open Questions
-
-### 1. Targeted DY-MinBias Strategy
-
-The current results suggest that simply increasing the global model capacity is not enough to solve the DY-MinBias overlap. A more targeted strategy could be tested, for example:
-
-- Apply class weighting or focal loss to give more importance to DY misclassification.
-- Add a dedicated binary DY-vs-MinBias classification head.
-- Oversample DY events or construct balanced DY-MinBias hard-example batches.
-- Use DY recall, DY F1, and DY -> MinBias confusion as explicit model-selection metrics, instead of relying only on global validation accuracy.
-
-**Question:** Should the next run prioritize improving DY recall, even if this slightly reduces MinBias purity or global accuracy?
-
-### 2. Revisit L1-Only Discriminating Features
-
-The current L1-only representation may not contain enough discriminating information for DY vs MinBias, or the model may not be using it effectively. Features worth reviewing include:
-
-- Lepton-like candidate counts.
-- High-pT charged candidates.
-- Photon-like activity.
-- Event-level pT tails.
-- Charge/PID composition of the leading L1 candidates.
-
-**Question:** Are there additional L1-level quantities that should be included to better capture the DY topology?
-
-### 3. Training and Model-Selection Strategy
-
-The wide attention + augmentation run reached its best validation loss around epoch 4, while later epochs did not improve DY separation. This suggests that early stopping or a DY-focused validation criterion may be useful.
-
-- Add early stopping based on validation loss.
-- Track DY recall and DY -> MinBias confusion during validation.
-- Save the best checkpoint using a DY-focused metric, not only validation loss.
-
-**Question:** Should I select the best model based on DY recall/F1 rather than overall validation loss?

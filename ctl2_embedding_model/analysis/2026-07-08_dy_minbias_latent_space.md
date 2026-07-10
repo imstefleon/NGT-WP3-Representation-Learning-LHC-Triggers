@@ -1,8 +1,8 @@
-# July 8, 2026 DY-MinBias Latent Space Analysis
+# 2026-07-08 DY-MinBias Latent Space Analysis [HF Collide-2V]
 
 Notebook:
 
-[`NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb`](NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb)
+`NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb`
 
 Run:
 
@@ -13,9 +13,7 @@ dy_minbias_wide_attn_aug_top_pt_minbias100000_top100000_qcd100000_dy100000_15590
 
 ## Purpose
 
-This run was used to study whether the DY-MinBias confusion is only a final
-classifier problem or whether the overlap already exists in the learned latent
-space.
+This run was used to study whether the DY-MinBias confusion is only a final classifier problem or whether the overlap already exists in the learned latent space.
 
 The run uses:
 
@@ -26,6 +24,12 @@ The run uses:
 - Attention pooling.
 - Augmentation enabled.
 - Gen-level information only for DY final-state diagnostics, not as model input.
+
+Dataset source:
+
+```text
+HF Collide-2V / parquet dataset path used by the original notebook loader
+```
 
 ## Global Classification Result
 
@@ -43,8 +47,7 @@ Overall:
 | Accuracy | 0.668 |
 | Macro F1 | 0.606 |
 
-The model still identifies Top and QCD much better than DY. DY precision is high
-only because the model predicts DY rarely. The DY recall remains very low.
+The model still identifies Top and QCD much better than DY. DY precision is high only because the model predicts DY rarely. The DY recall remains very low.
 
 ## Confusion Matrix
 
@@ -62,14 +65,11 @@ DY -> MinBias = 13,234 / 15,000 = 88.2%
 DY -> DY      =    765 / 15,000 =  5.1%
 ```
 
-This confirms that the dominant failure mode is still DY being classified as
-MinBias.
+This confirms that the dominant failure mode is still DY being classified as MinBias.
 
 ## DY Final-State Split
 
-Following the suggestion to go back to the original dataset, DY was split using
-gen-level hard-process lepton information. This information was used only to
-label the diagnostic subgroups.
+Following the suggestion to go back to the original dataset, DY was split using gen-level hard-process lepton information. This information was used only to label the diagnostic subgroups.
 
 Loaded DY final states:
 
@@ -91,8 +91,7 @@ Interpretation:
 
 - The network struggles with all DY final states.
 - `DY->ee` and `DY->mumu` are mostly classified as MinBias.
-- `DY->tautau` is also poorly recovered as DY, but has a larger confusion with
-  QCD.
+- `DY->tautau` is also poorly recovered as DY, but has a larger confusion with QCD.
 - The issue is not isolated to a single DY final state.
 
 ## Latent PCA
@@ -105,10 +104,7 @@ The first PCA components of the latent embeddings explain most of the variance:
 | PC2 | 28.4% |
 | PC3 | 10.2% |
 
-The focused PCA plot shows that MinBias, `DY->ee`, `DY->mumu`, and `DY->tautau`
-occupy almost the same latent region.
-
-![Latent PCA MinBias vs DY](ngt_linformer_nodes_aligned_outputs/runs/2026-07-08/dy_minbias_wide_attn_aug_top_pt_minbias100000_top100000_qcd100000_dy100000_155902/latent_separation_analysis/latent_pca_minbias_dy_pc1_pc2.png)
+The focused PCA plot shows that MinBias, `DY->ee`, `DY->mumu`, and `DY->tautau` occupy almost the same latent region.
 
 Main observation:
 
@@ -132,14 +128,11 @@ This shows that:
 
 - `DY->ee` and `DY->mumu` are almost identical in the latent space.
 - Both are closer to MinBias than to QCD or Top.
-- `DY->tautau` is somewhat different, but still not well separated as a DY
-  population.
+- `DY->tautau` is somewhat different, but still not well separated as a DY population.
 
 ## Linear Separability Test
 
-A simple linear classifier was trained on top of the frozen latent embeddings to
-test whether the information needed to separate DY from MinBias is present in
-the latent space.
+A simple linear classifier was trained on top of the frozen latent embeddings to test whether the information needed to separate DY from MinBias is present in the latent space.
 
 | Task | AUC | Balanced accuracy |
 |---|---:|---:|
@@ -154,13 +147,11 @@ Interpretation:
 
 - Top and QCD are separable from MinBias using the learned embeddings.
 - DY is not linearly separable from MinBias in the learned embeddings.
-- This suggests that the current latent representation does not encode enough
-  discriminating information for DY-MinBias.
+- This suggests that the current latent representation does not encode enough discriminating information for DY-MinBias.
 
 ## Local Neighborhood Mixing
 
-The k-nearest-neighbor study also shows strong local mixing between MinBias and
-DY.
+The k-nearest-neighbor study also shows strong local mixing between MinBias and DY.
 
 | Group | Same-group neighbors | MinBias neighbors | QCD neighbors | Any-DY neighbors |
 |---|---:|---:|---:|---:|
@@ -171,13 +162,11 @@ DY.
 | QCD | 0.555 | 0.076 | 0.555 | 0.263 |
 | Top | 0.878 | 0.000 | 0.106 | 0.016 |
 
-This confirms that DY and MinBias are locally interleaved in the latent space,
-while Top forms a much cleaner region.
+This confirms that DY and MinBias are locally interleaved in the latent space, while Top forms a much cleaner region.
 
 ## Main Conclusion
 
-The DY-MinBias problem is not only a final classifier head issue. The overlap is
-already present in the latent embeddings.
+The DY-MinBias problem is not only a final classifier head issue. The overlap is already present in the latent embeddings.
 
 The evidence is consistent across:
 
@@ -188,9 +177,7 @@ The evidence is consistent across:
 - Linear separability tests.
 - Local kNN neighborhood mixing.
 
-The current model learns useful structure for Top and QCD, but it does not learn
-a latent representation that separates DY from MinBias using the current L1-only
-inputs and training objective.
+The current model learns useful structure for Top and QCD, but it does not learn a latent representation that separates DY from MinBias using the current L1-only inputs and training objective.
 
 ## Files Generated
 

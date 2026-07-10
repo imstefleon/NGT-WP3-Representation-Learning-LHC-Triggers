@@ -1,0 +1,7 @@
+,pred_minbias,pred_top,pred_qcd,pred_dy_ee,pred_dy_mumu,pred_dy_tautau
+true_minbias,14041,0,947,9,3,0
+true_top,0,14376,617,3,4,0
+true_qcd,2525,1309,11096,35,35,0
+true_dy_ee,6176,28,354,292,5,0
+true_dy_mumu,6082,48,376,5,338,0
+true_dy_tautau,1063,19,185,10,19,0
