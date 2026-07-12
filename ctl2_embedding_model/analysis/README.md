@@ -11,3 +11,4 @@ The notes are organized by run date and focus on results, interpretation, and co
 | 2026-07-06 | `2026-07-06_top_pt_eta_fix.md` | Top-pT candidate selection fix and corrected runs |
 | 2026-07-08 | `2026-07-08_dy_minbias_latent_space.md` | DY final-state and latent-space separation analysis |
 | 2026-07-09 | `2026-07-09_dataset_diagnostics_and_runs.md` | Dataset source diagnostics across HF, ROOT, and updated Collide-2V |
+| 2026-07-11 | `2026-07-11_updated_collide2v_run.md` | Updated Collide-2V 100k-per-class safe baseline and DY-MinBias behavior |
