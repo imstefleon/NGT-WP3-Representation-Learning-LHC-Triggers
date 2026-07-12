@@ -4,355 +4,150 @@ Repository for the CERN Openlab Summer Student 2026 project:
 
 **NGT WP3 Representation Learning for LHC Triggers**
 
-The project studies machine-learning representations of simulated LHC collision
-events for Level-1 trigger and anomaly-detection workflows. The main objective
-is to learn compact latent spaces where Standard Model processes cluster in a
-physically meaningful way while preserving sensitivity to rare or anomalous
-signatures.
+This project studies machine-learning representations of simulated LHC collision events for Level-1 trigger and anomaly-detection workflows. The main objective is to learn compact latent spaces where Standard Model processes cluster in a physically meaningful way while preserving sensitivity to rare or anomalous signatures.
 
 Project notes and meeting context are tracked in the CERN CodiMD page:
 
 - <https://codimd.web.cern.ch/s/oEeoJz7QJ>
 
-## Scientific Context
+## Project Status
 
-Collider events are represented as unordered sets of reconstructed or trigger
-objects:
+Current safe baseline:
 
-```text
-X in R^(N_particles x N_features)
-```
+- updated Collide-2V workflow implemented in the main notebook
+- L1-only inputs from `L1T_PUPPIPart_*` branches
+- 100,000 events per class for MinBias, Top, QCD, and DY
+- top-pT candidate selection with 100 candidates per event
+- full-precision PyTorch Linformer-style encoder
+- wide attention + augmentation configuration preserved as the current comparison baseline
+- latest run and analysis uploaded under `ctl2_embedding_model/ngt_linformer_nodes_aligned_outputs/runs/2026-07-11/`
 
-The current work focuses on particle-level L1 trigger candidates from the
-Collide-2V / Collide-1M dataset, using features such as:
+Main current finding:
 
-- transverse momentum: `pt`
-- pseudorapidity: `eta`
-- azimuthal angle: `phi`
-- transverse impact parameter / displacement proxy: `dxy` or `D0`
-- particle identifier: `pdgId` / `PID`
-
-The project evaluates how different representation-learning strategies and
-model scales affect downstream classification and anomaly-detection behavior.
+- Top remains well separated.
+- QCD has moderate separation.
+- DY still overlaps strongly with MinBias in the latent space.
+- The updated Collide-2V baseline is now saved before future model changes.
 
 ## Repository Layout
 
 ```text
 .
-├── README.md
-└── ctl2_embedding_model/
-    ├── NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb
-    ├── Run_Baseline_1k_100k.md
-    ├── Run_DYMinBias_Followups.md
-    ├── .gitlab-ci.yml
-    ├── ctl2_model/
-    │   ├── conf/
-    │   ├── data/
-    │   ├── src/ctl2_model/
-    │   └── tests/
-    └── ngt_linformer_nodes_aligned_outputs/
-        └── runs/
+|-- README.md
+`-- ctl2_embedding_model/
+    |-- README.md
+    |-- NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb
+    |-- analysis/
+    |-- ctl2_model/
+    `-- ngt_linformer_nodes_aligned_outputs/
+        `-- runs/
 ```
 
-### `ctl2_embedding_model/`
+## Main Notebook
 
-Main project workspace for the CTL2 / L1 particle-level representation-learning
-studies.
-
-Important files:
-
-- `NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb`:
-  main notebook used for the NGT Linformer experiments on Collide-2V classes.
-- `Run_Baseline_1k_100k.md`:
-  run notes and analysis summary for the first 1k and 100k baseline studies.
-- `Run_DYMinBias_Followups.md`:
-  follow-up notes for the wide-attention augmentation and 300k MinBias L1-only
-  studies.
-- `Run_TopPt_EtaFix_Analysis.md`:
-  analysis of the eta-gap preprocessing fix and the three corrected top-pT
-  runs performed on July 6, 2026.
-- `Run_DY_MinBias_Latent_Analysis.md`:
-  analysis of the DY-MinBias latent-space overlap, including the DY gen-level
-  final-state split into `ee`, `mumu`, and `tautau`.
-- `ctl2_model/`:
-  Kedro-style project with reusable preprocessing, model, training,
-  validation, plotting, anomaly-score, and synthesis code.
-- `ngt_linformer_nodes_aligned_outputs/runs/`:
-  saved run artifacts, figures, summaries, and model outputs.
-
-Raw cached tensors are intentionally excluded from Git:
+The current safe notebook is:
 
 ```text
-ctl2_embedding_model/ngt_linformer_nodes_aligned_outputs/cache/
+ctl2_embedding_model/NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb
 ```
 
-## Dataset
+It is configured by default for updated Collide-2V:
 
-The project uses the public Collide-1M / Collide-2V dataset:
+- `DATA_SOURCE = 'collide2v_updated'`
+- `N_EVENTS_PER_CLASS = 100_000`
+- classes: `minbias`, `top`, `qcd`, `dy`
+- L1-only selected columns:
+  - `L1T_PUPPIPart_PT`
+  - `L1T_PUPPIPart_Eta`
+  - `L1T_PUPPIPart_Phi`
+  - `L1T_PUPPIPart_D0`
+  - `L1T_PUPPIPart_PID`
 
-- Hugging Face dataset:
-  <https://huggingface.co/datasets/fastmachinelearning/collide-1m>
-- Example notebook:
-  <https://huggingface.co/datasets/fastmachinelearning/collide-1m/blob/main/COLLIDE2V_example_notebook.ipynb>
+The notebook produces:
 
-Current experiments use four classes:
+- raw and preprocessed feature distributions
+- training history
+- multiclass evaluation metrics
+- confusion matrices
+- latent-space PCA
+- Mahalanobis anomaly scores using MinBias as the reference class
+- DY-MinBias event-level diagnostic summaries
 
-- `MinBias`
-- `top`
-- `QCD`
-- `DY`
+## Model Workflow
 
-The main notebook loads class-specific samples, builds a fixed
-`N_CONSTITUENTS x N_FEATURES` tensor, normalizes features from the training
-split only, builds a PID mapping from the training split only, and trains a
-full-precision Linformer-style classifier/embedding model.
-
-## Current Model Workflow
-
-The current baseline is a full-precision PyTorch analogue of the quantized /
-HGQ Linformer model in `ctl2_model`.
-
-Current wide-attention architecture:
+The current model is a full-precision PyTorch Linformer-style encoder aligned with the tensor structure and preprocessing logic from `ctl2_model`. It is not a bit-for-bit copy of the original Keras/HGQ implementation, but it keeps the same high-level representation-learning structure.
 
 ```mermaid
 flowchart TD
-    A["Input event<br/>100 L1 candidates x 24 features"] --> B["Valid mask<br/>candidate != 0"]
-
-    A --> C["Input projection<br/>Linear 24 -> 64 + ReLU"]
-
-    C --> D["Linformer Attention block 1<br/>dim=64, heads=4, proj_k=16"]
-    D --> E["Residual add<br/>attention1 + input projection"]
-
-    E --> F["Linformer Attention block 2<br/>dim=64, heads=4, proj_k=16"]
-    F --> G["Residual add<br/>attention2 + previous residual"]
-
-    G --> H["Attention pooling<br/>Linear 64 -> 32 -> 1<br/>softmax over valid candidates"]
-    B --> H
-
-    H --> I["Post-pooling MLP<br/>Linear 64 -> 64 + ReLU<br/>Linear 64 -> 64 + ReLU"]
-
-    I --> J["Latent embedding<br/>Linear 64 -> 24"]
-
-    J --> K["Classifier hidden<br/>Linear 24 -> 64 + ReLU"]
-
-    K --> L["Class logits<br/>Linear 64 -> 4"]
-
-    L --> M["Output classes<br/>MinBias / Top / QCD / DY"]
-
-    J --> N["Latent-space analysis<br/>PCA, Mahalanobis, centroid distances,<br/>DY final-state separation"]
+    A["Input event: 100 L1 candidates"] --> B["Feature preprocessing"]
+    B --> C["PID one-hot encoding"]
+    C --> D["Input projection"]
+    D --> E["Linformer block 1"]
+    E --> F["Linformer block 2"]
+    F --> G["Attention pooling"]
+    G --> H["Latent embedding"]
+    H --> I["Classifier head"]
+    H --> J["Latent-space diagnostics"]
+    I --> K["MinBias / Top / QCD / DY"]
+    J --> L["PCA"]
+    J --> M["Mahalanobis score"]
+    J --> N["DY-MinBias analysis"]
 ```
 
-Conceptual workflow:
+## Dataset Context
 
-```mermaid
-flowchart LR
-    A["L1 candidates"] --> B["Feature preprocessing"]
-    B --> C["Top-pT candidate selection"]
-    C --> D["Linformer encoder"]
-    D --> E["Attention pooling"]
-    E --> F["Latent space"]
-    F --> G["Classifier"]
-    G --> H["Physics class prediction"]
+The project has compared three dataset/input sources during development:
 
-    F --> I["Latent analysis"]
-    I --> J["PCA"]
-    I --> K["Mahalanobis score"]
-    I --> L["DY-MinBias separation"]
-    I --> M["DY final states<br/>ee / mumu / tautau"]
-```
+- Hugging Face Collide-2V / Collide-1M samples
+- ROOT-based L1 samples from `samples.json`
+- updated Collide-2V production parquet files
 
-The notebook evaluates:
+The current safe baseline uses the updated Collide-2V production parquets. The displacement-like input is `L1T_PUPPIPart_D0`, which is concentrated near zero with rare large outliers. This distribution differs from the ROOT `L1PuppiCands_dxy` behavior observed in earlier diagnostics, so the updated Collide-2V baseline should be treated as its own reference point.
 
-- raw and preprocessed feature distributions
-- multiclass classification performance
-- latent-space PCA visualizations
-- Mahalanobis anomaly scores using MinBias as the normal class
-- DY vs MinBias diagnostic features and separability checks
+## Run Analyses
 
-## Main Runs Included
-
-### 1k events per class smoke test
-
-Purpose:
-
-- verify end-to-end loading, preprocessing, training, embedding extraction, and
-  anomaly scoring
-- check alignment with the `ctl2_model` preprocessing and Linformer structure
-
-Key result:
-
-- the pipeline works end to end
-- `top` and `qcd` are reasonably separable
-- DY is strongly confused with MinBias
-
-### 100k events per class baseline
-
-Purpose:
-
-- production-scale NGT run requested in the first project meetings
-- test whether DY-MinBias confusion disappears with more data
-
-Key result:
-
-- global accuracy improves relative to the 1k smoke test
-- `top` and `qcd` improve
-- DY-MinBias confusion persists, indicating that the issue is not simply sample
-  size
-
-### Wide attention + phi augmentation run
-
-Purpose:
-
-- test whether additional model capacity, attention pooling, and phi-rotation
-  augmentation improve DY-MinBias separability
-
-Key result:
-
-- DY recall improves substantially
-- MinBias becomes more frequently misclassified as DY
-- the model changes the decision boundary but does not fully separate the two
-  classes
-
-## Current Physics / ML Findings
-
-The central open problem is the separability of `DY` and `MinBias`.
-
-Observed behavior:
-
-- Scaling from 1k to 100k events does not solve DY -> MinBias confusion.
-- Increasing model capacity and adding attention pooling improves DY recall,
-  but introduces significant MinBias -> DY confusion.
-- Mahalanobis scores separate `top` clearly and `qcd` partially, but typical
-  DY events remain close to MinBias in the latent space.
-- Simple event-level diagnostic features such as lepton multiplicity, photon
-  multiplicity, scalar `pt` summaries, and approximate opposite-sign
-  same-flavor lepton-pair mass provide only weak DY-MinBias separation.
-
-Working interpretation:
-
-- The limitation is likely not only model capacity.
-- DY and MinBias may be weakly separable with the current L1 particle features,
-  or the current representation may be missing explicit event-level physics
-  observables.
-
-## Next Analysis Questions
-
-Questions to clarify with supervisors:
-
-- Should DY be expected to separate cleanly from MinBias using only the current
-  L1 particle-level features?
-- Do many DY events lack visible L1 electron or muon candidates after the
-  current preprocessing?
-- Should the model include explicit event-level observables such as:
-  - lepton counts
-  - photon counts
-  - scalar `sum_pt` / `HT`
-  - leading-object `pt`
-  - approximate dilepton mass
-  - opposite-sign same-flavor pair counts
-  - isolation-like summaries
-- Should DY be split into subcategories, for example visible-lepton DY vs
-  low-activity DY?
-- Should DY-MinBias be studied as a dedicated binary task before expanding to
-  additional physics classes?
-- Would a contrastive or auxiliary loss help force latent separation between
-  DY and MinBias?
-
-## Running Locally
-
-The notebook is designed primarily for NGT / Linux execution, but the smaller
-1k-event configuration can be used for local smoke tests.
-
-From the repository root:
-
-```bash
-cd ctl2_embedding_model
-```
-
-Open:
+English analysis notes are stored in:
 
 ```text
-NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb
+ctl2_embedding_model/analysis/
 ```
 
-For local debugging, set in the notebook:
+Current analysis index:
 
-```python
-N_EVENTS_PER_CLASS = 1_000
-NUM_WORKERS = 0
+- `2026-07-01_baseline_1k_100k.md`: first 1k and 100k baseline runs
+- `2026-07-02_03_dy_minbias_followups.md`: wide attention, augmentation, and 300k MinBias follow-up studies
+- `2026-07-06_top_pt_eta_fix.md`: top-pT selection and eta-gap correction runs
+- `2026-07-08_dy_minbias_latent_space.md`: DY final-state and latent-space separation analysis
+- `2026-07-09_dataset_diagnostics_and_runs.md`: HF vs ROOT vs updated Collide-2V dataset diagnostics
+- `2026-07-11_updated_collide2v_run.md`: updated Collide-2V 100k-per-class safe baseline
+
+## Latest Uploaded Run
+
+The latest uploaded run is:
+
+```text
+ctl2_embedding_model/ngt_linformer_nodes_aligned_outputs/runs/2026-07-11/collide2v_updated_dy_minbias_wide_attn_aug_top_pt_minbias100000_top100000_qcd100000_dy100000_143554/
 ```
 
-For NGT production-scale runs:
+Key evaluation results:
 
-```python
-N_EVENTS_PER_CLASS = 100_000
-NUM_WORKERS = 4
-```
+| Class | Precision | Recall | F1-score |
+|---|---:|---:|---:|
+| MinBias | 0.433 | 0.733 | 0.544 |
+| Top | 0.908 | 0.936 | 0.921 |
+| QCD | 0.553 | 0.571 | 0.562 |
+| DY | 0.527 | 0.128 | 0.206 |
 
-The raw tensor cache is written under:
+Overall evaluation accuracy was approximately 0.592. The main limitation remains DY-MinBias overlap: 65.9 percent of true DY events were classified as MinBias in the multiclass evaluation.
+
+## Output Policy
+
+The following local output folders are intentionally ignored by git:
 
 ```text
 ctl2_embedding_model/ngt_linformer_nodes_aligned_outputs/cache/
+ctl2_embedding_model/ngt_linformer_nodes_aligned_outputs/diagnostic_notebooks/
+ctl2_embedding_model/ngt_linformer_nodes_aligned_outputs/diagnostics/
 ```
 
-This directory is ignored by Git because it contains large regenerated data
-artifacts.
-
-## Kedro Project
-
-Reusable project code is under:
-
-```text
-ctl2_embedding_model/ctl2_model/
-```
-
-Useful subdirectories:
-
-- `src/ctl2_model/models/`
-- `src/ctl2_model/pipelines/data_processing/`
-- `src/ctl2_model/pipelines/model_training/`
-- `src/ctl2_model/pipelines/model_validation/`
-- `src/ctl2_model/evaluation/`
-- `src/ctl2_model/utils/`
-
-The notebook currently mirrors important parts of this code in full precision
-to support direct NGT notebook development and comparison against the original
-pipeline.
-
-## Infrastructure
-
-The project targets the CERN NGT infrastructure:
-
-- PyTorch for model development
-- NGT / Kubeflow notebooks for GPU execution
-- GitLab for version control and CI
-- MLflow planned for experiment tracking and model management
-
-## Project Status
-
-Current status:
-
-- end-to-end Collide-2V Linformer workflow implemented
-- 1k and 100k event studies completed
-- wide attention + augmentation experiment completed
-- DY-MinBias separability identified as the main bottleneck
-
-Immediate next step:
-
-- enrich the representation with stronger event-level physics observables or
-  dedicated DY-MinBias objectives, then compare against the current
-  `wide_attn_aug` run.
-
-Planned follow-up run:
-
-- `EXPERIMENT_PRESET = "minbias300k_l1_mean_no_aug"`
-- load `300k` MinBias events and `100k` events for each other class
-- use L1 candidate columns only, with FullReco fallbacks disabled
-- use mean pooling instead of attention pooling
-- keep validation and evaluation balanced across classes
-- use balanced class weights during training to avoid learning only the
-  increased MinBias prior
-
-This run is meant to test whether a better-sampled MinBias normal class helps
-the model learn MinBias-specific structure without relying on additional
-non-L1 features.
+Selected run artifacts under `ngt_linformer_nodes_aligned_outputs/runs/` are versioned when they are needed as evidence for the project analysis.
