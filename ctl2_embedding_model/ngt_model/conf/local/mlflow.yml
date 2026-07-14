@@ -1,0 +1,9 @@
+server:
+  mlflow_tracking_uri: https://ml.cern.ch/models
+  credentials: mlflow_auth
+
+tracking:
+  experiment:
+    name: ngt_model
+  run:
+    name: null

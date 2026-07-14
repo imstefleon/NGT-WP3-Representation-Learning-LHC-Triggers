@@ -1,3 +1,22 @@
 ngt_linformer_nodes_aligned_outputs/cache/
 ngt_linformer_nodes_aligned_outputs/diagnostic_notebooks/
 ngt_linformer_nodes_aligned_outputs/diagnostics/
+
+ngt_mha_nodes_aligned_outputs/cache/
+ngt_mha_nodes_aligned_outputs/diagnostic_notebooks/
+ngt_mha_nodes_aligned_outputs/diagnostics/
+
+diagnostic_notebooks/
+diagnostics/
+
+# Large regenerated run tensors/checkpoints should stay local unless explicitly curated.
+ngt_linformer_nodes_aligned_outputs/runs/**/*.npy
+ngt_linformer_nodes_aligned_outputs/runs/**/models/
+ngt_mha_nodes_aligned_outputs/runs/**/*.npy
+ngt_mha_nodes_aligned_outputs/runs/**/models/
+
+__pycache__/
+*.pyc
+
+# Local credentials must stay out of Git.
+**/conf/local/credentials.yml

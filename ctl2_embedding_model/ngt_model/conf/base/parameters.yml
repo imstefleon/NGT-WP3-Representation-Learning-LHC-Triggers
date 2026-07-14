@@ -1,0 +1,26 @@
+training:
+  data_source: collide2v_updated
+  feature_mode: l1_only
+  candidate_selection: top_pt
+  n_constituents: 100
+  n_events_per_class: 100000
+  epochs: 50
+  early_stopping_patience: 10
+  batch_size: 256
+  num_workers: 0
+  lr: 0.001
+  weight_decay: 0.0001
+  augmentation_copies: 1
+  class_weight_mode: none
+
+model:
+  architecture: mha
+  latent_dim: 128
+  ff_dim: 128
+  num_heads: 8
+  pooling_mode: attention
+
+evaluation:
+  eval_quality_events: 2000
+  background_class: minbias
+  anomaly_class: dy
