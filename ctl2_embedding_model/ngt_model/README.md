@@ -37,7 +37,9 @@ ngt_model/
 - `src/ngt_model/models/mha_model.py`: standard MHA embedding model and latent-only wrapper.
 - `src/ngt_model/training/train_mha.py`: scriptable PyTorch training entry point, defaulting to `latent_dim=128`.
 - `src/ngt_model/evaluation/eval_quality.py`: Maciej's original latent-quality evaluator.
-- `src/ngt_model/evaluation/eval_quality_collide2v.py`: Collide-2V DY-vs-MinBias adaptation of the evaluator.
+- `src/ngt_model/evaluation/eval_quality_collide2v.py`: Collide-2V adaptation of the evaluator with configurable SM background and anomaly classes.
+- `src/ngt_model/evaluation/latent_diagnostics.py`: covariance/PCA effective-dimensionality diagnostics for saved `eval_latents.npy` files.
+- `src/ngt_model/evaluation/latent_dim_sweep.py`: fixed-data latent-dimension sweep for testing latent collapse.
 - `src/ngt_model/evaluation/scale_test.py`: small-to-larger MHA capacity/data sweep for eval-quality testing.
 
 ## Running from the Repository Root
@@ -114,3 +116,151 @@ The `scaling` grid trains increasingly larger configurations:
 | `small_10k` | 10,000 | 64 | 128 | 4 |
 | `medium_50k` | 50,000 | 128 | 128 | 8 |
 | `reasonable_100k` | 100,000 | 128 | 128 | 8 |
+
+## HH4B Anomaly Benchmark
+
+The next anomaly benchmark follows the setup clarified with Sabrina:
+
+```text
+background = minbias + top + qcd + dy
+anomaly    = hh4b
+```
+
+Small smoke test:
+
+```bash
+PYTHONPATH=ngt_model/src python -m ngt_model.training.train_mha \
+  --data-source collide2v_updated \
+  --class-names minbias,top,qcd,dy,hh4b \
+  --n-events-per-class 1000 \
+  --epochs 1 \
+  --latent-dim 128 \
+  --eval-quality-events 500 \
+  --run-name smoke_hh4b_full_sm
+```
+
+Eval-quality on an existing HH4B-capable checkpoint:
+
+```bash
+PYTHONPATH=ngt_model/src python -m ngt_model.evaluation.eval_quality_collide2v \
+  ngt_mha_nodes_aligned_outputs/runs/YYYY-MM-DD/RUN_NAME/models/mha_nodes_aligned_best_for_eval.pt \
+  --background-classes minbias,top,qcd,dy \
+  --anomaly-class hh4b \
+  --n-events-per-class 2000 \
+  --output ngt_mha_nodes_aligned_outputs/runs/YYYY-MM-DD/RUN_NAME/eval_quality_hh4b_full_sm.json
+```
+
+## HH4B With Granular DY Final States
+
+If the updated Collide-2V dataset contains separate DY final-state samples, the
+loader can also train with granular DY labels:
+
+```text
+dy_ee, dy_mumu, dy_tautau
+```
+
+Run a small availability smoke test first:
+
+```bash
+PYTHONPATH=ngt_model/src python -m ngt_model.training.train_mha \
+  --data-source collide2v_updated \
+  --class-names minbias,top,qcd,dy_ee,dy_mumu,dy_tautau,hh4b \
+  --n-events-per-class 1000 \
+  --epochs 1 \
+  --latent-dim 32 \
+  --run-name smoke_hh4b_dy_granular_1k
+```
+
+If all classes load correctly, run the 100k/class benchmark:
+
+```bash
+PYTHONPATH=ngt_model/src python -m ngt_model.training.train_mha \
+  --data-source collide2v_updated \
+  --class-names minbias,top,qcd,dy_ee,dy_mumu,dy_tautau,hh4b \
+  --n-events-per-class 100000 \
+  --epochs 30 \
+  --latent-dim 32 \
+  --ff-dim 128 \
+  --num-heads 8 \
+  --eval-quality-events 2000 \
+  --mlflow-enable \
+  --mlflow-experiment ngt_model \
+  --mlflow-run-name hh4b_full_sm_dy_granular_100k_latent32 \
+  --run-name hh4b_full_sm_dy_granular_100k_latent32
+```
+
+Important: these labels are only valid if the source dataset provides separate
+DY final-state samples or file paths. The code does not infer DY final state
+from L1-only candidates.
+
+## Latent Effective-Dimensionality Diagnostics
+
+To quantify latent-space collapse on any completed run:
+
+```bash
+PYTHONPATH=ngt_model/src python -m ngt_model.evaluation.latent_diagnostics \
+  ngt_mha_nodes_aligned_outputs/runs/YYYY-MM-DD/RUN_NAME
+```
+
+This writes:
+
+```text
+latent_effective_dim_summary.json
+latent_effective_dim_spectrum.csv
+figures/latent_effective_dim_spectrum.png
+```
+
+## Latent-Dimension Sweep
+
+To test whether `latent_dim=128` is actually needed, keep the HH4B full-SM setup fixed and vary only `latent_dim`:
+
+```bash
+PYTHONPATH=ngt_model/src python -m ngt_model.evaluation.latent_dim_sweep \
+  --class-names minbias,top,qcd,dy,hh4b \
+  --background-classes minbias,top,qcd,dy \
+  --anomaly-class hh4b \
+  --latent-dims 16,32,64,128 \
+  --n-events-per-class 100000 \
+  --epochs 30 \
+  --eval-quality-events 2000 \
+  --mlflow-enable \
+  --mlflow-experiment ngt_model \
+  --mlflow-run-name latent_dim_sweep_hh4b_100k \
+  --output ngt_mha_nodes_aligned_outputs/scale_tests/latent_dim_sweep_hh4b_100k.csv
+```
+
+The output CSV compares classification metrics, HH4B recall/F1, eval-quality, effective rank, participation ratio, and PCA cumulative explained variance for each latent dimension.
+
+## Latent Empirical-Fisher Diagnostic
+
+To test whether the latent dimensions are actually used by the classifier, compute the empirical Fisher diagonal in latent space:
+
+```bash
+PYTHONPATH=ngt_model/src python -m ngt_model.evaluation.latent_fisher \
+  ngt_mha_nodes_aligned_outputs/runs/YYYY-MM-DD/RUN_NAME \
+  --n-events-per-class 2000
+```
+
+For the HH4B full-SM 100k run:
+
+```bash
+PYTHONPATH=ngt_model/src python -m ngt_model.evaluation.latent_fisher \
+  ngt_mha_nodes_aligned_outputs/runs/2026-07-15/hh4b_full_sm_100k_latent128 \
+  --n-events-per-class 2000
+```
+
+This writes:
+
+```text
+latent_fisher_summary.json
+latent_fisher_by_dim.csv
+figures/latent_fisher_diag.png
+```
+
+The key quantity is:
+
+```text
+F_j = mean((d loss / d latent_j)^2)
+```
+
+Large Fisher mass means that a latent dimension has strong influence on the classification loss. If only a few dimensions contain most of the Fisher mass, the classifier is using a low-dimensional subspace even if the nominal latent dimension is large.

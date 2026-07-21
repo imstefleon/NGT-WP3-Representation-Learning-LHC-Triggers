@@ -1,0 +1,29 @@
+{
+  "n_events": 1500,
+  "latent_dim": 128,
+  "mean_loss": 0.8569144659042358,
+  "accuracy": 0.6066666666666667,
+  "fisher_total": 7.651234644209618e-07,
+  "fisher_effective_rank_entropy": 37.15695381356544,
+  "fisher_participation_ratio": 25.303800345154773,
+  "fisher_participation_ratio_norm": 0.19768594019652166,
+  "fisher_top1_mass": 0.08232518287494846,
+  "fisher_top5_mass": 0.3269636914426445,
+  "fisher_top10_mass": 0.5574141346222699,
+  "fisher_dims_50pct": 9,
+  "fisher_dims_80pct": 22,
+  "fisher_dims_90pct": 33,
+  "fisher_dims_95pct": 44,
+  "latent_variance_total": 258.73272637311067,
+  "active_dims_fisher_gt_1pct": 26,
+  "active_dims_variance_gt_1pct": 24,
+  "model_path": "ngt_mha_nodes_aligned_outputs/runs/2026-07-15/hh4b_full_sm_100k_latent128/models/mha_nodes_aligned_best.pt",
+  "class_names": [
+    "minbias",
+    "top",
+    "qcd",
+    "dy",
+    "hh4b"
+  ],
+  "n_events_per_class": 2000
+}

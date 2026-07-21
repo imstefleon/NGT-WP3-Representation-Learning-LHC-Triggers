@@ -40,6 +40,7 @@ from torch.utils.data.distributed import DistributedSampler
 
 from ngt_model.datasets.collide2v_data import (
     CLASS_NAMES,
+    SUPPORTED_CLASS_NAMES,
     Collide2VConfig,
     Collide2VLoader,
     augment_rotate_phi,
@@ -67,6 +68,10 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Train MHA Collide-2V embedding model.")
     parser.add_argument("--data-source", default="collide2v_updated",
                         choices=["collide2v_updated", "samples_json", "hf"])
+    parser.add_argument("--class-names", default=",".join(CLASS_NAMES),
+                        help=("Comma-separated class list. Default is the SM baseline "
+                              f"{','.join(CLASS_NAMES)}. For HH4B use "
+                              "minbias,top,qcd,dy,hh4b."))
     parser.add_argument("--feature-mode", default="l1_only",
                         choices=["l1_only"],
                         help="Only L1 candidate columns are allowed for NGT runs.")
@@ -98,6 +103,18 @@ def parse_args():
     parser.add_argument("--mlflow-experiment", default="ngt_model")
     parser.add_argument("--mlflow-run-name", default=None)
     return parser.parse_args()
+
+
+def parse_class_names(raw: str) -> list[str]:
+    class_names = [part.strip().lower() for part in raw.split(",") if part.strip()]
+    if not class_names:
+        raise ValueError("--class-names must contain at least one class")
+    unknown = [cls for cls in class_names if cls not in SUPPORTED_CLASS_NAMES]
+    if unknown:
+        raise ValueError(f"Unsupported classes {unknown}; supported classes are {SUPPORTED_CLASS_NAMES}")
+    if len(set(class_names)) != len(class_names):
+        raise ValueError(f"--class-names contains duplicates: {class_names}")
+    return class_names
 
 
 def setup_distributed(args):
@@ -150,11 +167,16 @@ def make_run_dir(args) -> Path:
     return project
 
 
-def make_class_weights(y_labels: np.ndarray, mode: str, device: torch.device) -> Optional[torch.Tensor]:
+def make_class_weights(
+    y_labels: np.ndarray,
+    mode: str,
+    device: torch.device,
+    n_classes: int,
+) -> Optional[torch.Tensor]:
     if mode == "none":
         return None
-    counts = np.bincount(y_labels, minlength=len(CLASS_NAMES)).astype(np.float64)
-    weights = len(y_labels) / (len(CLASS_NAMES) * np.maximum(counts, 1.0))
+    counts = np.bincount(y_labels, minlength=n_classes).astype(np.float64)
+    weights = len(y_labels) / (n_classes * np.maximum(counts, 1.0))
     return torch.tensor(weights, dtype=torch.float32, device=device)
 
 
@@ -329,6 +351,7 @@ def setup_mlflow(args, project: Path, config: dict):
 
 def main():
     args = parse_args()
+    class_names = parse_class_names(args.class_names)
     distributed, rank, world_size, local_rank, device = setup_distributed(args)
     set_seed(args.seed + rank)
     mlflow_client = None
@@ -344,6 +367,7 @@ def main():
             print(f"device={device} distributed={distributed} world_size={world_size}")
             print(f"output={project}")
             print(f"latent_dim={args.latent_dim} ff_dim={args.ff_dim} num_heads={args.num_heads}")
+            print(f"class_names={class_names}")
             if args.mlflow_enable:
                 print(f"mlflow=enabled uri={args.mlflow_tracking_uri} experiment={args.mlflow_experiment}")
             else:
@@ -355,16 +379,23 @@ def main():
             feature_mode=args.feature_mode,
             candidate_selection=args.candidate_selection,
             cache_dir=Path(args.output_root) / "cache",
+            class_names=class_names,
         )
         if args.collide2v_path:
             cfg_kwargs["collide2v_path"] = Path(args.collide2v_path)
         cfg = Collide2VConfig(**cfg_kwargs)
+        label_map = cfg.label_map
 
         loader = Collide2VLoader(cfg)
-        events_per_class = {cls: args.n_events_per_class for cls in CLASS_NAMES}
+        events_per_class = {cls: args.n_events_per_class for cls in class_names}
         raw_tensor, y, sample_name, _ = loader.load_classes(events_per_class, cache_prefix="train_mha")
 
-        train_idx, val_idx, eval_idx = build_split_indices(y, seed=args.seed)
+        train_idx, val_idx, eval_idx = build_split_indices(
+            y,
+            class_names=class_names,
+            label_map=label_map,
+            seed=args.seed,
+        )
         norm = compute_normalization_constants(raw_tensor[train_idx])
         pid_mapping = build_pid_mapping(raw_tensor[train_idx])
         X_all, pid_mapping = preprocess_dataset(raw_tensor, norm=norm, pid_mapping=pid_mapping, add_pid_ohe=True)
@@ -388,7 +419,8 @@ def main():
         if is_main(rank):
             config = {
                 **vars(args),
-                "class_names": CLASS_NAMES,
+                "class_names": class_names,
+                "label_map": label_map,
                 "n_features": int(X_all.shape[-1]),
                 "n_train": int(len(X_train)),
                 "n_train_aug": int(len(X_aug)),
@@ -407,7 +439,7 @@ def main():
             n_constituents=args.n_constituents,
             n_features=X_all.shape[-1],
             latent_dim=args.latent_dim,
-            n_classes=len(CLASS_NAMES),
+            n_classes=len(class_names),
             ff_dim=args.ff_dim,
             num_heads=args.num_heads,
             pooling_mode=args.pooling_mode,
@@ -419,7 +451,7 @@ def main():
         else:
             model_for_train = model
 
-        class_weights = make_class_weights(y_aug, args.class_weight_mode, device)
+        class_weights = make_class_weights(y_aug, args.class_weight_mode, device, len(class_names))
         optimizer = torch.optim.AdamW(model_for_train.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
         train_dataset = TensorDatasetTorch(X_aug, y_aug)
@@ -515,17 +547,17 @@ def main():
             np.save(project / "eval_logits.npy", logits_eval)
 
             pred_eval = logits_eval.argmax(axis=1)
-            report = make_classification_report(y_eval, pred_eval, CLASS_NAMES)
-            cm = make_confusion_matrix(y_eval, pred_eval, len(CLASS_NAMES))
+            report = make_classification_report(y_eval, pred_eval, class_names)
+            cm = make_confusion_matrix(y_eval, pred_eval, len(class_names))
             pd.DataFrame(report).T.to_csv(project / "classification_report_eval.csv")
             pd.DataFrame(
                 cm,
-                index=[f"true_{c}" for c in CLASS_NAMES],
-                columns=[f"pred_{c}" for c in CLASS_NAMES],
+                index=[f"true_{c}" for c in class_names],
+                columns=[f"pred_{c}" for c in class_names],
             ).to_csv(project / "confusion_matrix_eval.csv")
             if mlflow_client is not None:
                 mlflow_client.log_metric("best_val_loss", best_val_loss)
-                for cls_name in CLASS_NAMES:
+                for cls_name in class_names:
                     if cls_name in report:
                         mlflow_client.log_metric(f"eval_{cls_name}_precision", report[cls_name]["precision"])
                         mlflow_client.log_metric(f"eval_{cls_name}_recall", report[cls_name]["recall"])
@@ -538,6 +570,8 @@ def main():
             if args.eval_quality_events > 0:
                 from ngt_model.evaluation.eval_quality_collide2v import EvalCollide2V
 
+                anomaly_for_eval = "hh4b" if "hh4b" in class_names else "dy"
+                background_for_eval = [cls for cls in class_names if cls != anomaly_for_eval]
                 ev = EvalCollide2V(
                     str(project / "models" / "mha_nodes_aligned_best_for_eval.pt"),
                     n_events_per_class=args.eval_quality_events,
@@ -545,6 +579,8 @@ def main():
                     device=str(device),
                     output_path=str(project / f"eval_quality_scores_n{args.eval_quality_events}.json"),
                     collide2v_cfg=cfg,
+                    background_classes=background_for_eval,
+                    anomaly_class=anomaly_for_eval,
                 )
                 print(f"eval_quality_score={ev.score:.6f}")
                 if mlflow_client is not None:

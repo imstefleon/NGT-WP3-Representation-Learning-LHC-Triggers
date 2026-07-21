@@ -1,5 +1,11 @@
 training:
   data_source: collide2v_updated
+  class_names:
+    - minbias
+    - top
+    - qcd
+    - dy
+    - hh4b
   feature_mode: l1_only
   candidate_selection: top_pt
   n_constituents: 100
@@ -22,5 +28,9 @@ model:
 
 evaluation:
   eval_quality_events: 2000
-  background_class: minbias
-  anomaly_class: dy
+  background_classes:
+    - minbias
+    - top
+    - qcd
+    - dy
+  anomaly_class: hh4b

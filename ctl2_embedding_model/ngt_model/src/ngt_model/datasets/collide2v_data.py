@@ -27,7 +27,8 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 
 CLASS_NAMES = ['minbias', 'top', 'qcd', 'dy']
-LABEL_MAP = {name: i for i, name in enumerate(CLASS_NAMES)}
+SUPPORTED_CLASS_NAMES = ['minbias', 'top', 'qcd', 'dy', 'dy_ee', 'dy_mumu', 'dy_tautau', 'hh4b']
+LABEL_MAP = {name: i for i, name in enumerate(SUPPORTED_CLASS_NAMES)}
 
 HF_SAMPLES = {
     'minbias': ['minbias'],
@@ -38,6 +39,10 @@ HF_SAMPLES = {
     ],
     'qcd': ['QCD_HT50toInf', 'QCD_HT50tobb'],
     'dy': ['DYJetsToLL_13TeV-madgraphMLM-pythia8'],
+    'dy_ee': ['DYJetsToEE', 'DYToEE', 'ZToEE'],
+    'dy_mumu': ['DYJetsToMuMu', 'DYToMuMu', 'ZToMuMu'],
+    'dy_tautau': ['DYJetsToTauTau', 'DYToTauTau', 'ZToTauTau'],
+    'hh4b': ['HH4B', 'HH_4b', 'HHTo4B', 'GluGluToHHTo4B'],
 }
 
 COLLIDE2V_CLASS_PATH_HINTS = {
@@ -45,6 +50,10 @@ COLLIDE2V_CLASS_PATH_HINTS = {
     'top': ['top', 'tt_', 'tt-', 'tt0123j', 'ttjets'],
     'qcd': ['qcd'],
     'dy': ['dy', 'drell', 'dyjets'],
+    'dy_ee': ['dy_ee', 'dy-ee', 'dytoee', 'dyjets_to_ee', 'dyjetstoee', 'ztoee'],
+    'dy_mumu': ['dy_mumu', 'dy-mumu', 'dytomumu', 'dyjets_to_mumu', 'dyjetstomumu', 'ztomumu'],
+    'dy_tautau': ['dy_tautau', 'dy-tautau', 'dytotautau', 'dyjets_to_tautau', 'dyjetstotautau', 'ztotautau'],
+    'hh4b': ['hh4b', 'hh_4b', 'hh-4b', 'hhto4b', 'hh_to_4b', 'glugluhhto4b'],
 }
 
 L1_FEATURE_CANDIDATES = {
@@ -83,6 +92,11 @@ class Collide2VConfig:
             raise ValueError("feature_mode must be 'l1_only' for NGT runs")
         if self.data_source not in {'collide2v_updated', 'samples_json', 'hf'}:
             raise ValueError(f"data_source must be 'collide2v_updated', 'samples_json', or 'hf'")
+        unknown = [cls for cls in self.class_names if cls not in SUPPORTED_CLASS_NAMES]
+        if unknown:
+            raise ValueError(f"Unsupported classes: {unknown}. Supported classes: {SUPPORTED_CLASS_NAMES}")
+        if len(set(self.class_names)) != len(self.class_names):
+            raise ValueError(f"class_names contains duplicates: {self.class_names}")
         self.cache_dir = Path(self.cache_dir)
         self.collide2v_path = Path(self.collide2v_path)
         self.samples_json_path = Path(self.samples_json_path)
@@ -91,6 +105,10 @@ class Collide2VConfig:
     @property
     def feature_set_name(self) -> str:
         return self.feature_mode
+
+    @property
+    def label_map(self) -> Dict[str, int]:
+        return {name: i for i, name in enumerate(self.class_names)}
 
 
 class Collide2VLoader:
@@ -485,7 +503,7 @@ class Collide2VLoader:
         }
         raw_tensor = np.concatenate([raw_by_class[cls] for cls in self.cfg.class_names], axis=0).astype(np.float32)
         y = np.concatenate([
-            np.full(len(raw_by_class[cls]), LABEL_MAP[cls], dtype=np.int64)
+            np.full(len(raw_by_class[cls]), self.cfg.label_map[cls], dtype=np.int64)
             for cls in self.cfg.class_names
         ])
         sample_name = np.concatenate([

@@ -14,3 +14,4 @@ The notes are organized by run date and focus on results, interpretation, and co
 | 2026-07-11 | `2026-07-11_updated_collide2v_run.md` | Updated Collide-2V 100k-per-class safe baseline and DY-MinBias behavior |
 | 2026-07-13 | `2026-07-13_mha_eval_quality_analysis.md` | MHA updated Collide-2V run and first eval-quality latent-space score |
 | 2026-07-14 | `2026-07-14_mha_l1_100k_eval_quality.md` | MHA L1-only 100k-per-class run with latent_dim=128 and eval-quality analysis |
+| 2026-07-16 | `2026-07-16_hh4b_latent_dim_sweep.md` | HH4B full-SM latent-dimension sweep and latent-collapse diagnostics |

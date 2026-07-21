@@ -257,7 +257,7 @@ def run_sweep(grid: List[SizeTier], cfg: Collide2VConfig, epochs: int, eval_even
             # EvalCollide2V streams real data via Collide2VLoader; for the synthetic
             # smoke test we exercise the same metric pipeline directly instead.
             from ngt_model.evaluation.eval_quality_collide2v import (
-                gmm_anomaly_gap_collide2v, mahalanobis_anomaly_collide2v, BACKGROUND_CLASS, ANOMALY_CLASS,
+                gmm_anomaly_gap_collide2v, mahalanobis_anomaly_collide2v, BACKGROUND_CLASSES, ANOMALY_CLASS,
             )
             from ngt_model.evaluation.eval_quality import (
                 alignment_loss, participation_ratio, fit_pca_whiten, normalize_metrics,
@@ -279,15 +279,22 @@ def run_sweep(grid: List[SizeTier], cfg: Collide2VConfig, epochs: int, eval_even
                 X_aug_pp, _ = preprocess_dataset(X_aug_raw[a], norm=norm, pid_mapping=pid_mapping, add_pid_ohe=True)
                 Z_aug_list.append(extract_latents(wrapped, X_aug_pp, device))
 
+            background_label = "+".join(BACKGROUND_CLASSES)
             anomaly_mask = y_eval == LABEL_MAP[ANOMALY_CLASS]
-            bg_mask = y_eval == LABEL_MAP[BACKGROUND_CLASS]
+            bg_mask = np.isin(y_eval, [LABEL_MAP[cls] for cls in BACKGROUND_CLASSES])
             pca = fit_pca_whiten(Z_all[bg_mask])
             Z_whitened = pca.transform(Z_all)
             Z_aug_whitened = [pca.transform(z) for z in Z_aug_list]
 
             align = alignment_loss(Z_whitened, Z_aug_whitened)
             pr = participation_ratio(Z_whitened)
-            gmm, _ = gmm_anomaly_gap_collide2v(Z_whitened, anomaly_mask, bg_mask)
+            gmm, _ = gmm_anomaly_gap_collide2v(
+                Z_whitened,
+                anomaly_mask,
+                bg_mask,
+                background_label,
+                ANOMALY_CLASS,
+            )
             md = mahalanobis_anomaly_collide2v(Z_whitened, anomaly_mask, bg_mask)
             ref_ranges = _build_ref_ranges(latent_dim)
             norm_metrics = normalize_metrics({"align_loss": align, "pr": pr, "gmm_gap": gmm, "md": md}, ref_ranges)
