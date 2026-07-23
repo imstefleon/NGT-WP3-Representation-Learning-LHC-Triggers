@@ -41,6 +41,11 @@ ngt_model/
 - `src/ngt_model/evaluation/latent_diagnostics.py`: covariance/PCA effective-dimensionality diagnostics for saved `eval_latents.npy` files.
 - `src/ngt_model/evaluation/latent_dim_sweep.py`: fixed-data latent-dimension sweep for testing latent collapse.
 - `src/ngt_model/evaluation/scale_test.py`: small-to-larger MHA capacity/data sweep for eval-quality testing.
+- `src/ngt_model/evaluation/latent_fisher.py`: empirical Fisher diagnostic over latent coordinates.
+- `src/ngt_model/evaluation/head_fisher.py`: empirical Fisher diagnostic over classifier-head parameters.
+- `src/ngt_model/evaluation/seed_sweep.py`: repeated-seed stability sweep.
+- `src/ngt_model/evaluation/dataset_size_sweep.py`: fixed-architecture dataset-size sweep.
+- `src/ngt_model/evaluation/summary_table.py`: unified summary table builder for completed runs.
 
 ## Running from the Repository Root
 
@@ -193,6 +198,85 @@ Important: these labels are only valid if the source dataset provides separate
 DY final-state samples or file paths. The code does not infer DY final state
 from L1-only candidates.
 
+## Architecture Ablations
+
+The Week 2 collapse study keeps the HH4B full-SM benchmark fixed and changes one model component at a time:
+
+```text
+baseline = 100k events/class, latent_dim=32, ff_dim=128,
+           num_heads=8, num_attention_blocks=2,
+           pooling=mean, classifier_head=linear
+```
+
+The tested axes are:
+
+```text
+pooling_mode: mean vs attention
+classifier_head: linear vs mlp
+num_attention_blocks: 1, 2, 4
+ff_dim: 64, 128, 256
+num_heads: 4, 8, 16
+```
+
+Example:
+
+```bash
+PYTHONPATH=ngt_model/src python -m ngt_model.training.train_mha \
+  --data-source collide2v_updated \
+  --class-names minbias,top,qcd,dy,hh4b \
+  --n-events-per-class 100000 \
+  --epochs 30 \
+  --latent-dim 32 \
+  --ff-dim 128 \
+  --num-heads 8 \
+  --num-attention-blocks 2 \
+  --pooling-mode mean \
+  --classifier-head linear \
+  --eval-quality-events 2000 \
+  --mlflow-enable \
+  --mlflow-experiment ngt_model \
+  --run-name ablation_baseline_blocks2_mean_linear_100k_latent32
+```
+
+## CrossEntropy + Latent Variance Regularization
+
+The first objective-level anti-collapse test adds an optional variance penalty:
+
+```text
+loss = CrossEntropy + lambda * variance_penalty
+```
+
+This is controlled by:
+
+```text
+--latent-var-reg-weight
+--latent-var-target
+```
+
+Example:
+
+```bash
+PYTHONPATH=ngt_model/src python -m ngt_model.training.train_mha \
+  --data-source collide2v_updated \
+  --class-names minbias,top,qcd,dy,hh4b \
+  --n-events-per-class 100000 \
+  --epochs 30 \
+  --latent-dim 32 \
+  --ff-dim 128 \
+  --num-heads 8 \
+  --num-attention-blocks 2 \
+  --pooling-mode mean \
+  --classifier-head linear \
+  --latent-var-reg-weight 0.01 \
+  --latent-var-target 1.0 \
+  --eval-quality-events 2000 \
+  --mlflow-enable \
+  --mlflow-experiment ngt_model \
+  --run-name ablation_varreg001_blocks2_mean_linear_100k_latent32
+```
+
+In the Week 2 tests, `latent_var_reg_weight=0.01` improved effective rank, participation ratio, head-Fisher effective rank, HH4B F1, DY F1, and eval-quality with only a small accuracy cost.
+
 ## Latent Effective-Dimensionality Diagnostics
 
 To quantify latent-space collapse on any completed run:
@@ -264,3 +348,25 @@ F_j = mean((d loss / d latent_j)^2)
 ```
 
 Large Fisher mass means that a latent dimension has strong influence on the classification loss. If only a few dimensions contain most of the Fisher mass, the classifier is using a low-dimensional subspace even if the nominal latent dimension is large.
+
+## Classifier-Head Fisher Diagnostic
+
+To test whether the classifier head is hiding complexity, run:
+
+```bash
+PYTHONPATH=ngt_model/src python -m ngt_model.evaluation.head_fisher \
+  ngt_mha_nodes_aligned_outputs/runs/YYYY-MM-DD/RUN_NAME \
+  --n-events-per-class 2000 \
+  --device cuda
+```
+
+This writes:
+
+```text
+head_fisher_summary.json
+head_fisher_by_parameter.csv
+head_fisher_spectrum.csv
+figures/head_fisher_diag.png
+```
+
+If the linear classifier head performs similarly to the MLP head, and the head-Fisher dimensionality is not collapsing to a single parameter, then the latent representation is already close to linearly separable for the supervised labels.

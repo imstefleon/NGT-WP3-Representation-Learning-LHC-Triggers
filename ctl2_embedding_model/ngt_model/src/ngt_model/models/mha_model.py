@@ -4,9 +4,9 @@ Standard multi-head self-attention encoder for Collide-2V L1 candidate tensors.
 This is the architecture ablation of `LinformerAttention`/`LinformerEmbeddingFullPrecision`
 (see `NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb`): the low-rank
 Linformer sequence projection (`proj_k`, `E`/`F`) is replaced by standard (full, non-low-rank)
-multi-head self-attention. Everything else -- two attention blocks with residual adds, mean
-or attention pooling, the post-pool FFN, and the {'latent','logits'} output -- is unchanged,
-so the two architectures are directly comparable at matched `latent_dim`/`ff_dim`/`num_heads`.
+multi-head self-attention. Everything else -- residual attention blocks, mean or attention
+pooling, the post-pool FFN, and the {'latent','logits'} output -- is unchanged, so the two
+architectures are directly comparable at matched `latent_dim`/`ff_dim`/`num_heads`.
 
 Shared by `NGT_MHA_NodesAligned_FullPrecision_Collide2V_L1features.ipynb`, `scale_test.py`,
 and `eval_quality_collide2v.py` (via the `LatentOnlyWrapper` export) so the model definition
@@ -62,14 +62,22 @@ class MHAEmbeddingFullPrecision(nn.Module):
         ff_dim: int = 32,
         num_heads: int = 2,
         pooling_mode: str = 'mean',
+        classifier_head: str = 'mlp',
+        num_attention_blocks: int = 2,
     ):
         super().__init__()
         assert pooling_mode in {'mean', 'attention'}
+        assert classifier_head in {'mlp', 'linear'}
+        assert num_attention_blocks >= 1
         self.n_constituents = n_constituents
         self.pooling_mode = pooling_mode
+        self.classifier_head = classifier_head
+        self.num_attention_blocks = num_attention_blocks
         self.input_proj = nn.Linear(n_features, ff_dim)
-        self.attention1 = StandardMHA(ff_dim, num_heads=num_heads, seq_len=n_constituents)
-        self.attention2 = StandardMHA(ff_dim, num_heads=num_heads, seq_len=n_constituents)
+        self.attention_blocks = nn.ModuleList(
+            StandardMHA(ff_dim, num_heads=num_heads, seq_len=n_constituents)
+            for _ in range(num_attention_blocks)
+        )
         if pooling_mode == 'attention':
             pool_hidden = max(8, ff_dim // 2)
             self.pool_score = nn.Sequential(
@@ -86,11 +94,15 @@ class MHAEmbeddingFullPrecision(nn.Module):
             nn.ReLU(),
         )
         self.latent = nn.Linear(ff_dim, latent_dim)
-        self.cls_hidden = nn.Sequential(
-            nn.Linear(latent_dim, ff_dim),
-            nn.ReLU(),
-        )
-        self.class_logits = nn.Linear(ff_dim, n_classes)
+        if classifier_head == 'mlp':
+            self.cls_hidden = nn.Sequential(
+                nn.Linear(latent_dim, ff_dim),
+                nn.ReLU(),
+            )
+            self.class_logits = nn.Linear(ff_dim, n_classes)
+        else:
+            self.cls_hidden = nn.Identity()
+            self.class_logits = nn.Linear(latent_dim, n_classes)
 
     def pool(self, res, valid_mask):
         valid_float = valid_mask.unsqueeze(-1).to(res.dtype)
@@ -107,10 +119,12 @@ class MHAEmbeddingFullPrecision(nn.Module):
     def forward(self, x):
         valid_mask = torch.any(x != 0, dim=-1)
         emb = F.relu(self.input_proj(x))
-        x1 = self.attention1(emb)
-        res = x1 + emb
-        x2 = self.attention2(res)
-        res = x2 + res
+        res = emb
+        attention_blocks = getattr(self, 'attention_blocks', None)
+        if attention_blocks is None:
+            attention_blocks = [self.attention1, self.attention2]
+        for attention in attention_blocks:
+            res = attention(res) + res
         pooled = self.pool(res, valid_mask)
         h = self.post_pool(pooled)
         z = self.latent(h)

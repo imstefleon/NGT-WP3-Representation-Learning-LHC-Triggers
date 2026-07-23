@@ -15,6 +15,10 @@ ngt_linformer_nodes_aligned_outputs/runs/**/models/
 ngt_mha_nodes_aligned_outputs/runs/**/*.npy
 ngt_mha_nodes_aligned_outputs/runs/**/models/
 
+# Live summary can include in-progress runs; commit the complete-only table instead.
+ngt_mha_nodes_aligned_outputs/scale_tests/unified_experiment_summary.csv
+ngt_mha_nodes_aligned_outputs/scale_tests/*.log
+
 __pycache__/
 *.pyc
 
