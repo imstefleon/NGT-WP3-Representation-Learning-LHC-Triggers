@@ -27,7 +27,27 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 
 CLASS_NAMES = ['minbias', 'top', 'qcd', 'dy']
-SUPPORTED_CLASS_NAMES = ['minbias', 'top', 'qcd', 'dy', 'dy_ee', 'dy_mumu', 'dy_tautau', 'hh4b']
+SUPPORTED_CLASS_NAMES = [
+    'minbias',
+    'top',
+    'tt_hadronic',
+    'tt_leptonic',
+    'tt_semileptonic',
+    'qcd',
+    'dy',
+    'dy_ee',
+    'dy_mumu',
+    'dy_tautau',
+    'wjets',
+    'ww',
+    'ww_hadronic',
+    'ww_leptonic',
+    'ww_semileptonic',
+    'wz',
+    'ttw',
+    'ttz',
+    'hh4b',
+]
 LABEL_MAP = {name: i for i, name in enumerate(SUPPORTED_CLASS_NAMES)}
 
 HF_SAMPLES = {
@@ -37,22 +57,51 @@ HF_SAMPLES = {
         'tt0123j_5f_ckm_LO_MLM_leptonic',
         'tt0123j_5f_ckm_LO_MLM_semiLeptonic',
     ],
+    'tt_hadronic': ['tt0123j_5f_ckm_LO_MLM_hadronic'],
+    'tt_leptonic': ['tt0123j_5f_ckm_LO_MLM_leptonic'],
+    'tt_semileptonic': ['tt0123j_5f_ckm_LO_MLM_semiLeptonic'],
     'qcd': ['QCD_HT50toInf', 'QCD_HT50tobb'],
     'dy': ['DYJetsToLL_13TeV-madgraphMLM-pythia8'],
     'dy_ee': ['DYJetsToEE', 'DYToEE', 'ZToEE'],
     'dy_mumu': ['DYJetsToMuMu', 'DYToMuMu', 'ZToMuMu'],
     'dy_tautau': ['DYJetsToTauTau', 'DYToTauTau', 'ZToTauTau'],
+    'wjets': ['WJetsToLNu', 'WToLNu', 'WJets'],
+    'ww': ['WW'],
+    'ww_hadronic': ['WW_hadronic', 'WWTo4Q', 'WWToHadronic'],
+    'ww_leptonic': ['WW_leptonic', 'WWTo2L2Nu', 'WWToLeptonic'],
+    'ww_semileptonic': ['WW_semileptonic', 'WWToLNuQQ', 'WWToSemiLeptonic'],
+    'wz': ['WZ'],
+    'ttw': ['ttW', 'TTW', 'TTWJets'],
+    'ttz': ['ttZ', 'TTZ', 'TTZJets'],
     'hh4b': ['HH4B', 'HH_4b', 'HHTo4B', 'GluGluToHHTo4B'],
 }
 
 COLLIDE2V_CLASS_PATH_HINTS = {
     'minbias': ['minbias', 'min_bias', 'minimum_bias'],
     'top': ['top', 'tt_', 'tt-', 'tt0123j', 'ttjets'],
+    'tt_hadronic': ['tt0123j_5f_ckm_lo_mlm_hadronic', 'tt_hadronic', 'tt-hadronic', 'tttohadronic'],
+    'tt_leptonic': ['tt0123j_5f_ckm_lo_mlm_leptonic', 'tt_leptonic', 'tt-leptonic', 'tttoleptonic'],
+    'tt_semileptonic': [
+        'tt0123j_5f_ckm_lo_mlm_semileptonic',
+        'tt0123j_5f_ckm_lo_mlm_semileptonic',
+        'tt_semileptonic',
+        'tt-semileptonic',
+        'tt_semileptonic',
+        'tttosemileptonic',
+    ],
     'qcd': ['qcd'],
     'dy': ['dy', 'drell', 'dyjets'],
     'dy_ee': ['dy_ee', 'dy-ee', 'dytoee', 'dyjets_to_ee', 'dyjetstoee', 'ztoee'],
     'dy_mumu': ['dy_mumu', 'dy-mumu', 'dytomumu', 'dyjets_to_mumu', 'dyjetstomumu', 'ztomumu'],
     'dy_tautau': ['dy_tautau', 'dy-tautau', 'dytotautau', 'dyjets_to_tautau', 'dyjetstotautau', 'ztotautau'],
+    'wjets': ['wjets', 'w_jets', 'w+jets', 'wtoenu', 'wtomunu', 'wtotaunu', 'wjets_tolnu', 'wjetstolnu'],
+    'ww': ['ww'],
+    'ww_hadronic': ['ww_hadronic', 'ww-hadronic', 'wwto4q', 'wwtohadronic'],
+    'ww_leptonic': ['ww_leptonic', 'ww-leptonic', 'wwto2l2nu', 'wwtoleptonic'],
+    'ww_semileptonic': ['ww_semileptonic', 'ww-semileptonic', 'wwtolnuqq', 'wwtosemileptonic'],
+    'wz': ['wz'],
+    'ttw': ['ttw', 'tt_w', 'tt-w', 'ttwjets'],
+    'ttz': ['ttz', 'tt_z', 'tt-z', 'ttzjets'],
     'hh4b': ['hh4b', 'hh_4b', 'hh-4b', 'hhto4b', 'hh_to_4b', 'glugluhhto4b'],
 }
 

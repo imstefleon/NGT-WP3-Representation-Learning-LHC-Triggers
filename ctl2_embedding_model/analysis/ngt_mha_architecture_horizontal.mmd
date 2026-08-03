@@ -1,0 +1,49 @@
+flowchart LR
+    A["Updated<br/>Collide-2V event"]
+    B["Top-pT L1<br/>candidate selection"]
+    C["100 x 5 L1 tensor<br/>pt, eta, phi, D0, PID"]
+    D["Input projection<br/>Linear -> ff_dim<br/>ReLU"]
+
+    subgraph ENC["MHA Encoder"]
+        direction LR
+        E1["MHA block 1<br/>Q/K/V + attention"]
+        R1["Residual"]
+        E2["MHA block 2<br/>CTL2 baseline"]
+        R2["Residual"]
+        E1 --> R1 --> E2 --> R2
+    end
+
+    subgraph POOL["Pooling"]
+        direction TB
+        PM["Mean pooling"]
+        PA["Attention pooling"]
+    end
+
+    H["Post-pool dense stack<br/>Linear + ReLU<br/>Linear + ReLU"]
+    Z["Latent embedding<br/>latent_dim"]
+
+    subgraph OUT["Outputs and diagnostics"]
+        direction TB
+        CL["Classifier head<br/>linear or MLP"]
+        O["Class probabilities<br/>MinBias, Top, QCD, DY, HH4B"]
+        Q["Latent diagnostics<br/>PCA, effective rank,<br/>latent/head Fisher"]
+        CL --> O
+    end
+
+    A --> B --> C --> D --> E1
+    R2 --> PM
+    R2 --> PA
+    PM --> H
+    PA --> H
+    H --> Z
+    Z --> CL
+    Z --> Q
+
+    classDef data fill:#e8f1ff,stroke:#174a8b,stroke-width:1px,color:#0b2e5f;
+    classDef model fill:#eef7ed,stroke:#3b7f3b,stroke-width:1px,color:#163b16;
+    classDef group fill:#f8f9fb,stroke:#667085,stroke-width:1px,color:#111827;
+    classDef output fill:#f5e9ff,stroke:#6f42a4,stroke-width:1px,color:#35124d;
+
+    class A,B,C data;
+    class D,E1,R1,E2,R2,PM,PA,H,Z,CL model;
+    class O,Q output;

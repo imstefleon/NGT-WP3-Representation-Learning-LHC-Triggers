@@ -1,0 +1,26 @@
+flowchart TD
+    A["Updated Collide-2V event"] --> B["Top-pT L1 candidate selection"]
+    B --> C["100 x 5 L1 tensor<br/>pt, eta, phi, D0, PID"]
+    C --> D["Input projection<br/>Linear: features -> ff_dim + ReLU"]
+
+    D --> E["MHA encoder<br/>2 CTL2-style attention blocks"]
+    E --> E1["MHA block 1<br/>Q/K/V projections + scaled dot-product attention"]
+    E1 --> R1["Residual add"]
+    R1 --> E2["MHA block 2<br/>Q/K/V projections + scaled dot-product attention"]
+    E2 --> R2["Residual add"]
+
+    R2 --> P{"Pooling"}
+    P --> PM["Mean pooling<br/>global average over valid candidates"]
+    P --> PA["Attention pooling<br/>learned candidate weights"]
+
+    PM --> H["Post-pool dense stack<br/>Linear + ReLU + Linear + ReLU"]
+    PA --> H
+    H --> Z["Latent embedding<br/>latent_dim"]
+
+    Z --> CL{"Classifier head"}
+    CL --> L["Linear head<br/>Linear logits"]
+    CL --> M["MLP head<br/>Linear + ReLU + Linear logits"]
+
+    L --> O["Class probabilities<br/>MinBias, Top, QCD, DY, HH4B"]
+    M --> O
+    Z --> Q["Latent diagnostics<br/>PCA, effective rank, latent Fisher, head Fisher"]

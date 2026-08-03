@@ -1,21 +1,6 @@
 #!/usr/bin/env python3
 """
 Train the PyTorch MHA embedding model on Collide-2V L1 candidate tensors.
-
-This script is the non-notebook training entry point for the MHA architecture.
-It is intentionally close to the MHA notebook defaults, but uses a larger
-latent space by default (`latent_dim=128`) and can be launched with `torchrun`
-for DistributedDataParallel training.
-
-Examples:
-    # Single-GPU quick check
-    python train_mha.py --n-events-per-class 1000 --epochs 3 --device cuda
-
-    # Current larger test, latent_dim=128
-    python train_mha.py --n-events-per-class 100000 --epochs 50 --device cuda
-
-    # Distributed, if the environment exposes multiple GPUs
-    torchrun --nproc_per_node=2 train_mha.py --n-events-per-class 100000 --epochs 50
 """
 
 from __future__ import annotations
@@ -91,10 +76,22 @@ def parse_args():
     parser.add_argument("--num-attention-blocks", type=int, default=2)
     parser.add_argument("--pooling-mode", default="attention", choices=["mean", "attention"])
     parser.add_argument("--classifier-head", default="mlp", choices=["mlp", "linear"])
+    parser.add_argument("--loss-mode", default="ce", choices=["ce", "label_smoothing", "focal"],
+                        help="Supervised classification loss. FPGA inference is unchanged.")
+    parser.add_argument("--label-smoothing", type=float, default=0.0,
+                        help="Smoothing factor used when --loss-mode=label_smoothing.")
+    parser.add_argument("--focal-gamma", type=float, default=2.0,
+                        help="Focusing gamma used when --loss-mode=focal.")
+    parser.add_argument("--supcon-weight", type=float, default=0.0,
+                        help="Weight for supervised contrastive loss on the latent embedding. 0 disables it.")
+    parser.add_argument("--supcon-temperature", type=float, default=0.1,
+                        help="Temperature for supervised contrastive latent loss.")
     parser.add_argument("--latent-var-reg-weight", type=float, default=0.0,
                         help="Weight for latent variance regularization. 0 disables it.")
     parser.add_argument("--latent-var-target", type=float, default=1.0,
                         help="Minimum per-dimension latent std target for variance regularization.")
+    parser.add_argument("--latent-cov-reg-weight", type=float, default=0.0,
+                        help="Weight for latent covariance decorrelation regularization. 0 disables it.")
     parser.add_argument("--augmentation-copies", type=int, default=1)
     parser.add_argument("--class-weight-mode", default="none", choices=["none", "balanced"])
     parser.add_argument("--seed", type=int, default=42)
@@ -202,6 +199,67 @@ def latent_variance_regularization(latent: torch.Tensor, target_std: float) -> t
     return torch.mean(F.relu(target_std - std))
 
 
+def latent_covariance_regularization(latent: torch.Tensor) -> torch.Tensor:
+    if latent.shape[0] <= 1 or latent.shape[1] <= 1:
+        return latent.new_tensor(0.0)
+    z = latent - latent.mean(dim=0, keepdim=True)
+    cov = (z.T @ z) / max(latent.shape[0] - 1, 1)
+    off_diag = cov - torch.diag(torch.diagonal(cov))
+    return off_diag.pow(2).sum() / latent.shape[1]
+
+
+def supervised_contrastive_loss(
+    latent: torch.Tensor,
+    targets: torch.Tensor,
+    temperature: float,
+) -> torch.Tensor:
+    if latent.shape[0] <= 1:
+        return latent.new_tensor(0.0)
+    z = F.normalize(latent, dim=1)
+    logits = (z @ z.T) / max(temperature, 1e-6)
+    logits = logits - logits.max(dim=1, keepdim=True).values.detach()
+
+    self_mask = torch.eye(latent.shape[0], dtype=torch.bool, device=latent.device)
+    positive_mask = (targets[:, None] == targets[None, :]) & ~self_mask
+    valid = positive_mask.sum(dim=1) > 0
+    if not bool(valid.any()):
+        return latent.new_tensor(0.0)
+
+    logits_masked = logits.masked_fill(self_mask, float("-inf"))
+    log_prob = logits_masked - torch.logsumexp(logits_masked, dim=1, keepdim=True)
+    positive_log_prob = log_prob.masked_fill(~positive_mask, 0.0)
+    per_anchor = -positive_log_prob.sum(dim=1) / positive_mask.sum(dim=1).clamp_min(1)
+    return per_anchor[valid].mean()
+
+
+def classification_loss(
+    logits: torch.Tensor,
+    targets: torch.Tensor,
+    class_weights: Optional[torch.Tensor],
+    loss_mode: str,
+    label_smoothing: float,
+    focal_gamma: float,
+) -> torch.Tensor:
+    if loss_mode == "ce":
+        return F.cross_entropy(logits, targets, weight=class_weights)
+    if loss_mode == "label_smoothing":
+        return F.cross_entropy(
+            logits,
+            targets,
+            weight=class_weights,
+            label_smoothing=label_smoothing,
+        )
+    if loss_mode == "focal":
+        log_probs = F.log_softmax(logits, dim=1)
+        log_pt = log_probs.gather(1, targets[:, None]).squeeze(1)
+        pt = log_pt.exp().clamp(min=1e-8, max=1.0)
+        focal = (1.0 - pt).pow(focal_gamma)
+        if class_weights is not None:
+            focal = focal * class_weights[targets]
+        return -(focal * log_pt).mean()
+    raise ValueError(f"Unknown loss_mode={loss_mode}")
+
+
 def run_epoch(
     model,
     loader,
@@ -211,12 +269,20 @@ def run_epoch(
     distributed=False,
     latent_var_reg_weight: float = 0.0,
     latent_var_target: float = 1.0,
+    latent_cov_reg_weight: float = 0.0,
+    supcon_weight: float = 0.0,
+    supcon_temperature: float = 0.1,
+    loss_mode: str = "ce",
+    label_smoothing: float = 0.0,
+    focal_gamma: float = 2.0,
 ):
     is_train = optimizer is not None
     model.train(is_train)
     loss_sum = 0.0
     ce_loss_sum = 0.0
     var_reg_sum = 0.0
+    cov_reg_sum = 0.0
+    supcon_loss_sum = 0.0
     correct = 0.0
     total = 0.0
 
@@ -225,9 +291,24 @@ def run_epoch(
         yb = yb.to(device, non_blocking=True)
         with torch.set_grad_enabled(is_train):
             out = model(xb)
-            ce_loss = F.cross_entropy(out["logits"], yb, weight=class_weights)
+            ce_loss = classification_loss(
+                out["logits"],
+                yb,
+                class_weights,
+                loss_mode=loss_mode,
+                label_smoothing=label_smoothing,
+                focal_gamma=focal_gamma,
+            )
             var_reg = latent_variance_regularization(out["latent"], latent_var_target)
-            loss = ce_loss + (latent_var_reg_weight * var_reg if latent_var_reg_weight > 0 else 0.0)
+            cov_reg = latent_covariance_regularization(out["latent"])
+            supcon = supervised_contrastive_loss(out["latent"], yb, supcon_temperature)
+            loss = ce_loss
+            if latent_var_reg_weight > 0:
+                loss = loss + latent_var_reg_weight * var_reg
+            if latent_cov_reg_weight > 0:
+                loss = loss + latent_cov_reg_weight * cov_reg
+            if supcon_weight > 0:
+                loss = loss + supcon_weight * supcon
             if is_train:
                 optimizer.zero_grad(set_to_none=True)
                 loss.backward()
@@ -237,13 +318,17 @@ def run_epoch(
         loss_sum += float(loss.item()) * bs
         ce_loss_sum += float(ce_loss.item()) * bs
         var_reg_sum += float(var_reg.item()) * bs
+        cov_reg_sum += float(cov_reg.item()) * bs
+        supcon_loss_sum += float(supcon.item()) * bs
         correct += float((out["logits"].argmax(dim=1) == yb).sum().item())
         total += float(bs)
 
     loss, acc = metric_reduce(loss_sum, correct, total, device, distributed)
     ce_loss, _ = metric_reduce(ce_loss_sum, correct, total, device, distributed)
     var_reg, _ = metric_reduce(var_reg_sum, correct, total, device, distributed)
-    return loss, acc, ce_loss, var_reg
+    cov_reg, _ = metric_reduce(cov_reg_sum, correct, total, device, distributed)
+    supcon_loss, _ = metric_reduce(supcon_loss_sum, correct, total, device, distributed)
+    return loss, acc, ce_loss, var_reg, cov_reg, supcon_loss
 
 
 @torch.no_grad()
@@ -367,8 +452,14 @@ def setup_mlflow(args, project: Path, config: dict):
         "num_attention_blocks": args.num_attention_blocks,
         "pooling_mode": args.pooling_mode,
         "classifier_head": args.classifier_head,
+        "loss_mode": args.loss_mode,
+        "label_smoothing": args.label_smoothing,
+        "focal_gamma": args.focal_gamma,
+        "supcon_weight": args.supcon_weight,
+        "supcon_temperature": args.supcon_temperature,
         "latent_var_reg_weight": args.latent_var_reg_weight,
         "latent_var_target": args.latent_var_target,
+        "latent_cov_reg_weight": args.latent_cov_reg_weight,
         "augmentation_copies": args.augmentation_copies,
         "class_weight_mode": args.class_weight_mode,
         "seed": args.seed,
@@ -530,17 +621,29 @@ def main():
             if train_sampler is not None:
                 train_sampler.set_epoch(epoch)
             t0 = time.time()
-            train_loss, train_acc, train_ce_loss, train_var_reg = run_epoch(
+            train_loss, train_acc, train_ce_loss, train_var_reg, train_cov_reg, train_supcon_loss = run_epoch(
                 model_for_train, train_loader, device, class_weights=class_weights,
                 optimizer=optimizer, distributed=distributed,
                 latent_var_reg_weight=args.latent_var_reg_weight,
                 latent_var_target=args.latent_var_target,
+                latent_cov_reg_weight=args.latent_cov_reg_weight,
+                supcon_weight=args.supcon_weight,
+                supcon_temperature=args.supcon_temperature,
+                loss_mode=args.loss_mode,
+                label_smoothing=args.label_smoothing,
+                focal_gamma=args.focal_gamma,
             )
-            val_loss, val_acc, val_ce_loss, val_var_reg = run_epoch(
+            val_loss, val_acc, val_ce_loss, val_var_reg, val_cov_reg, val_supcon_loss = run_epoch(
                 model_for_train, val_loader, device, class_weights=class_weights,
                 optimizer=None, distributed=distributed,
                 latent_var_reg_weight=args.latent_var_reg_weight,
                 latent_var_target=args.latent_var_target,
+                latent_cov_reg_weight=args.latent_cov_reg_weight,
+                supcon_weight=args.supcon_weight,
+                supcon_temperature=args.supcon_temperature,
+                loss_mode=args.loss_mode,
+                label_smoothing=args.label_smoothing,
+                focal_gamma=args.focal_gamma,
             )
             elapsed = time.time() - t0
             row = {
@@ -549,10 +652,14 @@ def main():
                 "train_acc": train_acc,
                 "train_ce_loss": train_ce_loss,
                 "train_latent_var_reg": train_var_reg,
+                "train_latent_cov_reg": train_cov_reg,
+                "train_supcon_loss": train_supcon_loss,
                 "val_loss": val_loss,
                 "val_acc": val_acc,
                 "val_ce_loss": val_ce_loss,
                 "val_latent_var_reg": val_var_reg,
+                "val_latent_cov_reg": val_cov_reg,
+                "val_supcon_loss": val_supcon_loss,
                 "elapsed_s": elapsed,
             }
             history.append(row)
@@ -561,7 +668,8 @@ def main():
                     f"Epoch {epoch:03d}/{args.epochs} "
                     f"train_loss={train_loss:.4f} train_acc={train_acc:.4f} "
                     f"val_loss={val_loss:.4f} val_acc={val_acc:.4f} "
-                    f"var_reg={val_var_reg:.4f} "
+                    f"var_reg={val_var_reg:.4f} cov_reg={val_cov_reg:.4f} "
+                    f"supcon={val_supcon_loss:.4f} "
                     f"{elapsed:.1f}s",
                     flush=True,
                 )
@@ -572,10 +680,14 @@ def main():
                             "train_acc": train_acc,
                             "train_ce_loss": train_ce_loss,
                             "train_latent_var_reg": train_var_reg,
+                            "train_latent_cov_reg": train_cov_reg,
+                            "train_supcon_loss": train_supcon_loss,
                             "val_loss": val_loss,
                             "val_acc": val_acc,
                             "val_ce_loss": val_ce_loss,
                             "val_latent_var_reg": val_var_reg,
+                            "val_latent_cov_reg": val_cov_reg,
+                            "val_supcon_loss": val_supcon_loss,
                             "epoch_elapsed_s": elapsed,
                         },
                         step=epoch,
