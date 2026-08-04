@@ -54,14 +54,14 @@ The goal was to test whether changing the training objective can reduce latent c
 
 | Run | Effective rank | Participation ratio | Head-Fisher effective rank | Head-Fisher participation ratio |
 |---|---:|---:|---:|---:|
-| label smoothing 0.05 + var 0.01 | 11.17 | 8.32 | 79.63 | 41.61 |
-| focal gamma 2.0 + var 0.01 | 8.08 | 5.28 | 51.63 | 27.32 |
-| CE + SupCon 0.05 + var 0.01 | 2.84 | 1.82 | 23.87 | 13.07 |
-| CE + var 0.01 + cov 0.001 | **29.12** | **20.19** | **445.55** | **302.15** |
-| CE + SupCon 0.10 + var 0.01 | 3.57 | 2.27 | 22.14 | 14.50 |
-| CE + var 0.01 + cov 0.005 | 27.47 | 16.42 | 254.24 | 125.83 |
+| label smoothing 0.05 + var 0.01 | 11.17 | 8.32 | 20.36 | 10.66 |
+| focal gamma 2.0 + var 0.01 | 8.08 | 5.28 | 13.80 | 6.18 |
+| CE + SupCon 0.05 + var 0.01 | 2.84 | 1.82 | 20.85 | 13.54 |
+| CE + var 0.01 + cov 0.001 | **29.12** | **20.19** | **115.52** | **56.94** |
+| CE + SupCon 0.10 + var 0.01 | 3.57 | 2.27 | 13.86 | 8.90 |
+| CE + var 0.01 + cov 0.005 | 27.47 | 16.42 | 55.92 | 23.69 |
 
-The diagnostics are now available for all six runs in the local unified summary table. The strongest dimensional activation appears in the covariance-regularized runs, especially `cov_weight=0.001`.
+The diagnostics are now available for all six runs through the saved latent and classifier-head Fisher summaries. The strongest dimensional activation appears in the covariance-regularized runs, especially `cov_weight=0.001`.
 
 ## Interpretation
 
@@ -93,8 +93,8 @@ This same run also has the strongest dimensional activation:
 ```text
 effective rank = 29.12
 participation ratio = 20.19
-head-Fisher effective rank = 445.55
-head-Fisher participation ratio = 302.15
+head-Fisher effective rank = 115.52
+head-Fisher participation ratio = 56.94
 ```
 
 This is the clearest evidence from the current comparison that covariance regularization can directly fight latent collapse.
@@ -149,8 +149,8 @@ cov 0.005: eval_quality = 0.1318
 Both covariance runs activated many more dimensions than the baseline, but the weaker covariance penalty was better:
 
 ```text
-cov 0.001: effective rank = 29.12, head-Fisher effective rank = 445.55
-cov 0.005: effective rank = 27.47, head-Fisher effective rank = 254.24
+cov 0.001: effective rank = 29.12, head-Fisher effective rank = 115.52
+cov 0.005: effective rank = 27.47, head-Fisher effective rank = 55.92
 ```
 
 This suggests that simply forcing more dimensions to be active is not sufficient; the active dimensions must preserve physically useful separation. The best result is a moderate covariance penalty, not the strongest one.

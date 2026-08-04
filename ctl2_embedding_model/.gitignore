@@ -19,6 +19,11 @@ ngt_mha_nodes_aligned_outputs/runs/**/models/
 ngt_mha_nodes_aligned_outputs/scale_tests/unified_experiment_summary.csv
 ngt_mha_nodes_aligned_outputs/scale_tests/*.log
 
+# Local backups created before filling the complete summary table.
+ngt_mha_nodes_aligned_outputs/scale_tests/unified_experiment_summary_complete_only.before_log_fill.csv
+ngt_mha_nodes_aligned_outputs/scale_tests/unified_experiment_summary_complete_only.before_nparams_log_fill.csv
+ngt_mha_nodes_aligned_outputs/scale_tests/unified_experiment_summary_complete_only.before_missing_run_fill.csv
+
 presentations/
 
 __pycache__/
