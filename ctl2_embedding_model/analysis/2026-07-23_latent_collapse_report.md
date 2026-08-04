@@ -1,8 +1,8 @@
-# Week 2 Latent Collapse Report
+# Latent Collapse Report
 
 ## Scope
 
-This report summarizes the Week 2 latent-collapse study for the L1-only MHA workflow in `ngt_model`.
+This report summarizes the latent-collapse study for the L1-only MHA workflow in `ngt_model`.
 All runs use updated Collide-2V L1 candidate inputs only:
 
 ```text
@@ -238,7 +238,7 @@ ngt_mha_nodes_aligned_outputs/scale_tests/figures/latent_vs_head_fisher_dimensio
 
 ## Conclusion
 
-The Week 2 analysis found that latent collapse is stable across seeds and is not solved by increasing latent dimension, dataset size, attention depth, internal width, number of heads, or classifier-head complexity alone.
+The analysis found that latent collapse is stable across seeds and is not solved by increasing latent dimension, dataset size, attention depth, internal width, number of heads, or classifier-head complexity alone.
 
 The most promising result is `CrossEntropy + latent variance regularization` with `lambda=0.01`, which improves effective dimensionality, Fisher dimensionality, HH4B F1, DY F1, and eval-quality with only a small accuracy cost.
 

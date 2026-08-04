@@ -19,6 +19,8 @@ ngt_mha_nodes_aligned_outputs/runs/**/models/
 ngt_mha_nodes_aligned_outputs/scale_tests/unified_experiment_summary.csv
 ngt_mha_nodes_aligned_outputs/scale_tests/*.log
 
+presentations/
+
 __pycache__/
 *.pyc
 

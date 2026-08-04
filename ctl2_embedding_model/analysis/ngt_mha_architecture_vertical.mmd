@@ -10,17 +10,17 @@ flowchart TD
     E2 --> R2["Residual add"]
 
     R2 --> P{"Pooling"}
-    P --> PM["Mean pooling<br/>global average over valid candidates"]
+    P --> PM["Mean pooling (baseline)<br/>global average over valid candidates"]
     P --> PA["Attention pooling<br/>learned candidate weights"]
 
     PM --> H["Post-pool dense stack<br/>Linear + ReLU + Linear + ReLU"]
     PA --> H
-    H --> Z["Latent embedding<br/>latent_dim"]
+    H --> Z["Latent embedding<br/>latent_dim = 64 (baseline)<br/>CE + latent_var_reg_weight = 0.01"]
 
     Z --> CL{"Classifier head"}
-    CL --> L["Linear head<br/>Linear logits"]
+    CL --> L["Linear head (baseline)<br/>Linear logits"]
     CL --> M["MLP head<br/>Linear + ReLU + Linear logits"]
 
-    L --> O["Class probabilities<br/>MinBias, Top, QCD, DY, HH4B"]
+    L --> O["Class probabilities<br/>SM superclasses: MinBias, QCD, DY, Top,<br/>W+jets, WW, WZ, ttW, ttZ + HH4B (signal)"]
     M --> O
     Z --> Q["Latent diagnostics<br/>PCA, effective rank, latent Fisher, head Fisher"]

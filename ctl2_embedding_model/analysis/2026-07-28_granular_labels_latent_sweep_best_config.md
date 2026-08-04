@@ -13,7 +13,7 @@ All runs use the updated Collide-2V L1-only inputs:
 The main changes studied were:
 
 - Adding more granular physics labels for top and diboson final states.
-- Reusing the best Week 2 configuration found from the architecture and variance-regularization studies.
+- Reusing the best configuration found from the architecture and variance-regularization studies.
 - Comparing nominal latent sizes `32`, `64`, and `128` under the granular-label setup.
 
 ## Dataset Granularity Added
@@ -52,7 +52,7 @@ This made it possible to test whether a richer label space would encourage the m
 
 ## Best Configuration Used
 
-The granular runs reused the strongest configuration found in the previous Week 2 studies:
+The granular runs reused the strongest configuration found in the previous collapse studies:
 
 ```text
 latent_dim = 32 / 64 / 128

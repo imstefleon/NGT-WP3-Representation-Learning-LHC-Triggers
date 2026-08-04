@@ -89,18 +89,18 @@ flowchart TD
     E2 --> R2["Residual add"]
 
     R2 --> P{"Pooling"}
-    P -->|"mean"| PM["Global average over valid candidates"]
+    P -->|"mean (baseline)"| PM["Global average over valid candidates"]
     P -->|"attention"| PA["Learned attention pooling"]
 
     PM --> H["Post-pool dense stack<br/>Linear + ReLU + Linear + ReLU"]
     PA --> H
-    H --> Z["Latent embedding<br/>latent_dim"]
+    H --> Z["Latent embedding<br/>latent_dim = 64 (baseline)<br/>CE + latent_var_reg_weight = 0.01"]
     Z --> CL{"Classifier head"}
-    CL -->|"linear"| L["Linear logits"]
+    CL -->|"linear (baseline)"| L["Linear logits"]
     CL -->|"MLP"| M["Linear + ReLU + Linear logits"]
 
     Z --> Q["Latent diagnostics<br/>PCA, effective rank, Fisher"]
-    L --> O["Class probabilities<br/>MinBias, Top, QCD, DY, HH4B"]
+    L --> O["Class probabilities<br/>SM superclasses: MinBias, QCD, DY, Top,<br/>W+jets, WW, WZ, ttW, ttZ + HH4B (signal)"]
     M --> O
 ```
 
@@ -112,6 +112,15 @@ The scriptable ablations keep this flow fixed and change one component at a time
 - `ff_dim`: `64`, `128`, `256`.
 - `num_heads`: `4`, `8`, `16`.
 - `latent_var_reg_weight`: CrossEntropy-only vs CrossEntropy plus latent variance regularization.
+
+The latent-collapse follow-up added two further controlled axes on top of this baseline:
+
+- **Label granularity**: splitting `Top` and `WW` into final-state sub-classes (`tt_hadronic`, `tt_leptonic`,
+  `tt_semileptonic`, `WW_hadronic`, `WW_leptonic`, `WW_semileptonic`) to test whether coarse labels were
+  part of the collapse, swept at `latent_dim = 32, 64, 128`.
+- **Loss objective**: six CrossEntropy-based variants (variance reg., label smoothing + variance, focal +
+  variance, supervised-contrastive + variance at two strengths, and variance + covariance regularization at
+  two strengths), evaluated on the broader SM superclass setup below.
 
 Key modules:
 
@@ -206,14 +215,35 @@ python -m ngt_model.evaluation.dataset_size_sweep \
   --mlflow-experiment ngt_model
 ```
 
-The current anti-collapse objective test is available directly in `train_mha.py`:
+The current anti-collapse objective test is available directly in `train_mha.py`. The current best
+supervised configuration uses `latent_dim=64` rather than the earlier `32`:
 
 ```bash
 python -m ngt_model.training.train_mha \
   --data-source collide2v_updated \
   --class-names minbias,top,qcd,dy,hh4b \
   --n-events-per-class 100000 \
-  --latent-dim 32 \
+  --latent-dim 64 \
+  --ff-dim 128 \
+  --num-heads 8 \
+  --num-attention-blocks 2 \
+  --pooling-mode mean \
+  --classifier-head linear \
+  --latent-var-reg-weight 0.01 \
+  --latent-var-target 1.0 \
+  --eval-quality-events 2000 \
+  --mlflow-enable \
+  --mlflow-experiment ngt_model
+```
+
+The same configuration, run on the broader SM superclass label set:
+
+```bash
+python -m ngt_model.training.train_mha \
+  --data-source collide2v_updated \
+  --class-names minbias,qcd,dy,top,wjets,ww,wz,ttw,ttz,hh4b \
+  --n-events-per-class 100000 \
+  --latent-dim 64 \
   --ff-dim 128 \
   --num-heads 8 \
   --num-attention-blocks 2 \
@@ -245,7 +275,12 @@ Important recent notes:
 - `analysis/2026-07-13_mha_eval_quality_analysis.md`
 - `analysis/2026-07-14_mha_l1_100k_eval_quality.md`
 - `analysis/2026-07-21_hh4b_collapse_diagnostics.md`
-- `analysis/2026-07-23_week2_latent_collapse_report.md`
+- `analysis/2026-07-23_latent_collapse_report.md`
+- `analysis/2026-07-24_latent_collapse_report.md`
+- `analysis/2026-07-28_granular_labels_latent_sweep_best_config.md`
+- `analysis/2026-07-31_superclass_loss_objective_comparison.md`
+
+Presentation materials are kept locally in `presentations/` and ignored by Git.
 
 ## Output Policy
 
@@ -275,3 +310,35 @@ The latest L1-only MHA work shows:
 - Mean pooling and a linear classifier head provide a strong supervised baseline.
 - `ff_dim=256` improves HH4B F1 but does not remove low effective dimensionality.
 - A small latent variance regularizer (`latent_var_reg_weight=0.01`) improves effective rank, participation ratio, head-Fisher dimensionality, HH4B F1, DY F1, and eval-quality with only a small accuracy cost.
+
+## Latent-Collapse Findings (exploratory, controlled tests)
+
+Building on the collapse diagnostics, the latest controlled tests covered three axes: best
+configuration, label granularity, and loss-objective design. These are exploratory results from
+single-setting runs, not a finished conclusion:
+
+- **Best configuration**: converged on `latent_dim=64` (up from `32`) as the best balance of HH4B F1,
+  DY F1, and eval-quality across the granular-label sweep, keeping `latent_var_reg_weight=0.01` from
+  the earlier collapse diagnostics. See `analysis/2026-07-28_granular_labels_latent_sweep_best_config.md`.
+- **Label granularity**: splitting `Top`/`WW` into final-state sub-classes made classification harder
+  (accuracy ~0.62 -> ~0.46) but increased effective latent dimensionality well beyond the coarse-label
+  case (effective rank ~10.5 at `latent_dim=32`, ~16.6 at `latent_dim=128`). This supports, but does not
+  prove, the hypothesis that coarse labels contributed to the earlier collapse. A non-monotonic dip at
+  `latent_dim=64` (effective rank 3.07) is unexplained and flagged for a repeat run.
+- **Broader SM superclass benchmark**: expanded from 5 to 10 classes (`MinBias, QCD, DY, Top, W+jets,
+  WW, WZ, ttW, ttZ, HH4B`), giving a more realistic SM background for the HH4B anomaly benchmark. See
+  `analysis/2026-07-31_superclass_loss_objective_comparison.md`.
+- **Six loss-objective variants** (CE + variance, + label smoothing, focal, + SupCon at two strengths,
+  + covariance regularization at two strengths) were compared on this broader benchmark. Covariance-
+  regularized variants reach the highest effective rank (~27-29) and eval-quality (~0.13-0.23), SupCon
+  variants give the best DY F1, and label smoothing gives the highest accuracy but near-zero
+  eval-quality. HH4B F1 stays essentially flat (0.557-0.561) across all six, so no single objective is
+  a clear anomaly-detection win yet — metrics disagree with each other and model selection needs to
+  stay multi-metric.
+- **Reproducibility caveat**: the granular-label sweep and five of the six loss-objective runs currently
+  exist only as reported numbers in the two analysis notes above; only the covariance-0.005 run has an
+  independent output directory on disk. Treat these as directional evidence pending fuller logging.
+
+Details, per-run tables, and figure references: `analysis/2026-07-23_latent_collapse_report.md`,
+`analysis/2026-07-28_granular_labels_latent_sweep_best_config.md`, and
+`analysis/2026-07-31_superclass_loss_objective_comparison.md`.
