@@ -1,54 +1,108 @@
-# CTL2 Embedding Model
+# openlab_ss26
 
-This repository contains the CERN OpenLab L1 anomaly-detection embedding study. The current work compares L1-only event embeddings for Standard Model processes and HH4B using updated Collide-2V production samples.
+Repository for the CERN Openlab Summer Student 2026 project:
 
-The active development now has two complementary workflows:
+**NGT WP3 Representation Learning for LHC Triggers**
 
-- **Linformer notebook workflow** for the historical baseline and DY-MinBias studies.
-- **PyTorch MHA / `ngt_model` workflow** for scriptable training, MLflow tracking, and eval-quality scaling tests.
+This project studies L1-only machine-learning representations of simulated LHC collision events for Level-1 trigger and anomaly-detection workflows. The current focus is to learn compact latent spaces where Standard Model processes and candidate anomaly signals such as HH4B can be compared, while keeping the input representation compatible with L1 trigger information.
 
-All current model inputs are treated as **L1-only**. Gen-level or FullReco information is used only for diagnostics such as DY final-state labeling, not as model input features.
+Project notes and meeting context are tracked in the CERN CodiMD page:
+
+- <https://codimd.web.cern.ch/s/oEeoJz7QJ>
+
+## Project Status
+
+Current safe baseline:
+
+- Updated Collide-2V production parquet workflow implemented.
+- L1-only inputs from `L1T_PUPPIPart_*` branches.
+- Linformer notebook baseline preserved for historical DY-MinBias studies.
+- PyTorch MHA workflow added under `ctl2_embedding_model/ngt_model/`.
+- HH4B-vs-full-SM benchmark added with `minbias,top,qcd,dy` as background.
+- Latent-collapse diagnostics added: PCA/effective rank, latent Fisher, classifier-head Fisher, and eval-quality.
+- Supervised architecture ablations completed for pooling, classifier head, attention blocks, `ff_dim`, and `num_heads`.
+- CrossEntropy plus small latent variance regularization was added as the first objective-level anti-collapse test.
+- Notebook paths were updated so notebooks can live inside their workflow output folders.
+- Best-configuration convergence, a granular-label test, a broader SM superclass benchmark, and six loss-objective variants were added to the latent-collapse study.
+
+Main current finding:
+
+- Latent collapse is stable across seeds and is not solved by increasing nominal latent dimension, dataset size, attention depth, or number of heads alone.
+- Mean pooling and linear classifier heads are good supervised baselines.
+- `ff_dim=256` improves HH4B F1 but does not remove low effective dimensionality.
+- A small latent variance regularizer (`lambda=0.01`) improves effective rank, participation ratio, head-Fisher dimensionality, HH4B F1, DY F1, and eval-quality with only a small accuracy cost.
+- The best supervised configuration now uses `latent_dim=64` (selected from the granular-label sweep for its balance of HH4B F1, DY F1, and eval-quality).
+- More granular physics labels (splitting `Top`/`WW` by final state) increase effective latent dimensionality, supporting the hypothesis that label granularity, not only architecture, shapes the collapse.
+- On a broader 10-class SM superclass benchmark, covariance-regularized objectives raise effective rank and eval-quality the most, but no single loss-objective variant clearly wins on HH4B F1 as well - model selection needs multiple metrics together. See "Latent-Collapse Findings" below for details and caveats.
 
 ## Repository Layout
 
 ```text
-ctl2_embedding_model/
-|-- analysis/                         # English run-analysis notes
-|-- ctl2_model/                        # Original Kedro/CTL2 project
-|-- diagnostic_notebooks/              # Dataset and DXY diagnostic notebooks
-|-- ngt_linformer_nodes_aligned_outputs/
-|   |-- NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb
-|   `-- runs/                          # Selected Linformer run evidence
-|-- ngt_mha_nodes_aligned_outputs/
-|   |-- NGT_MHA_NodesAligned_FullPrecision_Collide2V_L1features.ipynb
-|   |-- runs/                          # Selected MHA run evidence
-|   `-- scale_tests/                   # Eval-quality scaling CSVs
-|-- ngt_model/                         # Scriptable PyTorch MHA package
-|-- .gitignore
-|-- .gitlab-ci.yml
-`-- README.md
+.
+|-- README.md
+`-- ctl2_embedding_model/
+    |-- README.md
+    |-- analysis/
+    |-- ctl2_model/
+    |-- diagnostic_notebooks/
+    |-- diagnostics/
+    |-- ngt_linformer_nodes_aligned_outputs/
+    |   |-- NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb
+    |   `-- runs/
+    |-- ngt_mha_nodes_aligned_outputs/
+    |   |-- NGT_MHA_NodesAligned_FullPrecision_Collide2V_L1features.ipynb
+    |   |-- runs/
+    |   `-- scale_tests/
+    `-- ngt_model/
+        |-- conf/
+        |-- data/
+        |-- src/ngt_model/
+        `-- tests/
 ```
 
-## Main Notebooks
+## Main Workflows
 
-The notebooks are intentionally stored inside the workflow folders they produce:
+| Workflow | Location | Purpose |
+|---|---|---|
+| Linformer notebook | `ctl2_embedding_model/ngt_linformer_nodes_aligned_outputs/NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb` | Historical baseline and DY-MinBias studies |
+| MHA notebook | `ctl2_embedding_model/ngt_mha_nodes_aligned_outputs/NGT_MHA_NodesAligned_FullPrecision_Collide2V_L1features.ipynb` | MHA architecture comparison |
+| Scriptable MHA package | `ctl2_embedding_model/ngt_model/` | PyTorch training, MLflow logging, and eval-quality tests |
 
-| Workflow | Notebook |
-|---|---|
-| Linformer baseline and DY-MinBias studies | `ngt_linformer_nodes_aligned_outputs/NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb` |
-| MHA architecture ablation | `ngt_mha_nodes_aligned_outputs/NGT_MHA_NodesAligned_FullPrecision_Collide2V_L1features.ipynb` |
+The notebooks now resolve the project root automatically. This avoids broken relative paths after moving the notebooks into their workflow folders.
 
-Both notebooks now resolve the repository root automatically, so they can be opened either from the repository root or from their workflow folder without duplicating output paths.
+## Current Model Flow
 
-## Current Input Representation
+```mermaid
+flowchart TD
+    A["Updated Collide-2V parquet samples"] --> B["L1-only candidate tensor<br/>100 candidates x 5 features"]
+    B --> C["Input projection<br/>Linear + ReLU"]
+    C --> D["Stacked MHA attention blocks<br/>Q/K/V message passing + residuals"]
+    D --> E["Event pooling<br/>mean (baseline) or learned attention pooling"]
+    E --> F["Post-pool dense stack<br/>Linear + ReLU + Linear + ReLU"]
+    F --> G["Latent embedding<br/>latent_dim = 64 (baseline)<br/>CE + latent_var_reg_weight = 0.01"]
+    G --> H["Classifier head<br/>linear (baseline) or MLP"]
+    G --> I["Latent diagnostics<br/>PCA, effective rank, Fisher, eval-quality"]
+    H --> J["SM superclasses: MinBias, QCD, DY, Top,<br/>W+jets, WW, WZ, ttW, ttZ + HH4B (signal)"]
+```
 
-Each event is represented as a `100 x 5` L1 candidate tensor:
+The current ablation campaign changes one component at a time: pooling, classifier head,
+number of attention blocks, `ff_dim`, number of attention heads, and latent variance regularization. This is used to study
+whether the low effective dimensionality is caused by architecture choices or by the
+cross-entropy training objective.
+
+The latent-collapse follow-up added two further controlled axes on top of this baseline: label granularity (splitting `Top`/`WW`
+into final-state sub-classes) and loss-objective design (six CrossEntropy-based variants, evaluated on a
+broader 10-class SM superclass benchmark). See "Latent-Collapse Findings" below.
+
+## L1-Only Inputs
+
+The current updated Collide-2V representation uses a `100 x 5` tensor per event:
 
 ```text
 [pt, eta, phi, dxy_or_D0, pid]
 ```
 
-The current updated Collide-2V L1 columns are:
+For updated Collide-2V, these are read from:
 
 ```text
 L1T_PUPPIPart_PT
@@ -58,96 +112,14 @@ L1T_PUPPIPart_D0
 L1T_PUPPIPart_PID
 ```
 
-Preprocessing follows the same logic across the notebooks and `ngt_model`:
+Gen-level or FullReco information is not used as model input. It is only used for diagnostics, for example when studying DY final-state subgroups.
 
-- `pt`: `log1p` transform followed by training-split min-max scaling.
-- `eta`: training-split min-max scaling.
-- `phi`: fixed scaling from `[-pi, pi]` to `[0, 1]`.
-- `dxy_or_D0`: kept as the L1 D0/DXY-like value.
-- `pid`: mapped from the training split and one-hot encoded.
-- Candidates are selected with `top_pt`.
+## MHA Training
 
-## `ngt_model`
-
-`ngt_model/` contains the scriptable PyTorch MHA workflow extracted from notebook development.
-
-## Model Architecture
-
-The active MHA workflow follows the CTL2 particle-level idea: each event is treated as a set
-of up to 100 L1 candidates, attention blocks act as event featurizers, and the pooled event
-representation is compressed into a fixed-size latent embedding.
-
-```mermaid
-flowchart TD
-    A["Updated Collide-2V event"] --> B["Top-pT L1 candidate selection"]
-    B --> C["100 x 5 L1 tensor<br/>pt, eta, phi, D0, PID"]
-    C --> D["Input projection<br/>Linear: features -> ff_dim + ReLU"]
-
-    D --> E1["MHA block 1<br/>Q/K/V projections + scaled dot-product attention"]
-    E1 --> R1["Residual add"]
-    R1 --> E2["MHA block 2<br/>default CTL2-style baseline"]
-    E2 --> R2["Residual add"]
-
-    R2 --> P{"Pooling"}
-    P -->|"mean (baseline)"| PM["Global average over valid candidates"]
-    P -->|"attention"| PA["Learned attention pooling"]
-
-    PM --> H["Post-pool dense stack<br/>Linear + ReLU + Linear + ReLU"]
-    PA --> H
-    H --> Z["Latent embedding<br/>latent_dim = 64 (baseline)<br/>CE + latent_var_reg_weight = 0.01"]
-    Z --> CL{"Classifier head"}
-    CL -->|"linear (baseline)"| L["Linear logits"]
-    CL -->|"MLP"| M["Linear + ReLU + Linear logits"]
-
-    Z --> Q["Latent diagnostics<br/>PCA, effective rank, Fisher"]
-    L --> O["Class probabilities<br/>SM superclasses: MinBias, QCD, DY, Top,<br/>W+jets, WW, WZ, ttW, ttZ + HH4B (signal)"]
-    M --> O
-```
-
-The scriptable ablations keep this flow fixed and change one component at a time:
-
-- `num_attention_blocks`: `1`, `2`, `4`.
-- `pooling_mode`: `mean` vs `attention`.
-- `classifier_head`: `linear` vs `mlp`.
-- `ff_dim`: `64`, `128`, `256`.
-- `num_heads`: `4`, `8`, `16`.
-- `latent_var_reg_weight`: CrossEntropy-only vs CrossEntropy plus latent variance regularization.
-
-The latent-collapse follow-up added two further controlled axes on top of this baseline:
-
-- **Label granularity**: splitting `Top` and `WW` into final-state sub-classes (`tt_hadronic`, `tt_leptonic`,
-  `tt_semileptonic`, `WW_hadronic`, `WW_leptonic`, `WW_semileptonic`) to test whether coarse labels were
-  part of the collapse, swept at `latent_dim = 32, 64, 128`.
-- **Loss objective**: six CrossEntropy-based variants (variance reg., label smoothing + variance, focal +
-  variance, supervised-contrastive + variance at two strengths, and variance + covariance regularization at
-  two strengths), evaluated on the broader SM superclass setup below.
-
-Key modules:
-
-- `ngt_model/src/ngt_model/datasets/collide2v_data.py`: L1-only updated Collide-2V loading, preprocessing, splits, PID mapping, and augmentation helpers.
-- `ngt_model/src/ngt_model/models/mha_model.py`: MHA embedding model and latent-only wrapper.
-- `ngt_model/src/ngt_model/training/train_mha.py`: training entry point with optional MLflow logging.
-- `ngt_model/src/ngt_model/evaluation/eval_quality_collide2v.py`: Collide-2V adaptation of the eval-quality metric.
-- `ngt_model/src/ngt_model/evaluation/scale_test.py`: small-to-reasonable eval-quality scaling sweep.
-- `ngt_model/src/ngt_model/evaluation/latent_diagnostics.py`: PCA/eigenvalue effective-dimensionality diagnostic.
-- `ngt_model/src/ngt_model/evaluation/latent_fisher.py`: empirical Fisher diagnostic in latent space.
-- `ngt_model/src/ngt_model/evaluation/head_fisher.py`: classifier-head Fisher approximation.
-- `ngt_model/src/ngt_model/evaluation/seed_sweep.py`: repeated-seed sweep for uncertainty estimates.
-- `ngt_model/src/ngt_model/evaluation/dataset_size_sweep.py`: fixed-architecture dataset-size sweep.
-- `ngt_model/src/ngt_model/evaluation/summary_table.py`: unified run/sweep summary table builder.
-
-Run from the repository root:
+From `ctl2_embedding_model/`:
 
 ```bash
 export PYTHONPATH=$PWD/ngt_model/src:$PYTHONPATH
-python -m ngt_model.training.train_mha --help
-```
-
-## MLflow
-
-The MHA training and scaling sweep can log to CERN MLflow under the `ngt_model` experiment:
-
-```bash
 python -m ngt_model.training.train_mha \
   --data-source collide2v_updated \
   --n-events-per-class 100000 \
@@ -172,173 +144,75 @@ python -m ngt_model.evaluation.scale_test \
   --output ngt_mha_nodes_aligned_outputs/scale_tests/scaling_eval_quality.csv
 ```
 
-## Collapse Diagnostics and Scaling Checks
-
-The current latent-collapse follow-up uses four complementary checks:
-
-```bash
-# 1. PCA/eigenvalue latent effective dimensionality
-python -m ngt_model.evaluation.latent_diagnostics \
-  ngt_mha_nodes_aligned_outputs/runs/2026-07-15/hh4b_full_sm_100k_latent128
-
-# 2. Latent-space empirical Fisher
-python -m ngt_model.evaluation.latent_fisher \
-  ngt_mha_nodes_aligned_outputs/runs/2026-07-15/hh4b_full_sm_100k_latent128 \
-  --n-events-per-class 2000
-
-# 3. Classifier-head Fisher approximation
-python -m ngt_model.evaluation.head_fisher \
-  ngt_mha_nodes_aligned_outputs/runs/2026-07-15/hh4b_full_sm_100k_latent128 \
-  --n-events-per-class 2000
-
-# 4. Unified summary table from runs and sweep CSVs
-python -m ngt_model.evaluation.summary_table \
-  --run-root ngt_mha_nodes_aligned_outputs/runs \
-  --sweep-csvs ngt_mha_nodes_aligned_outputs/scale_tests/latent_dim_sweep_hh4b_100k_combined.csv \
-  --output ngt_mha_nodes_aligned_outputs/scale_tests/unified_experiment_summary.csv
-```
-
-Repeated seeds and dataset-size sweeps are available as scriptable entry points:
-
-```bash
-python -m ngt_model.evaluation.seed_sweep \
-  --seeds 42,43,44 \
-  --n-events-per-class 100000 \
-  --latent-dim 32 \
-  --mlflow-enable \
-  --mlflow-experiment ngt_model
-
-python -m ngt_model.evaluation.dataset_size_sweep \
-  --event-sizes 100000,200000,300000 \
-  --latent-dim 32 \
-  --mlflow-enable \
-  --mlflow-experiment ngt_model
-```
-
-The current anti-collapse objective test is available directly in `train_mha.py`. The current best
-supervised configuration uses `latent_dim=64` rather than the earlier `32`:
-
-```bash
-python -m ngt_model.training.train_mha \
-  --data-source collide2v_updated \
-  --class-names minbias,top,qcd,dy,hh4b \
-  --n-events-per-class 100000 \
-  --latent-dim 64 \
-  --ff-dim 128 \
-  --num-heads 8 \
-  --num-attention-blocks 2 \
-  --pooling-mode mean \
-  --classifier-head linear \
-  --latent-var-reg-weight 0.01 \
-  --latent-var-target 1.0 \
-  --eval-quality-events 2000 \
-  --mlflow-enable \
-  --mlflow-experiment ngt_model
-```
-
-The same configuration, run on the broader SM superclass label set:
-
-```bash
-python -m ngt_model.training.train_mha \
-  --data-source collide2v_updated \
-  --class-names minbias,qcd,dy,top,wjets,ww,wz,ttw,ttz,hh4b \
-  --n-events-per-class 100000 \
-  --latent-dim 64 \
-  --ff-dim 128 \
-  --num-heads 8 \
-  --num-attention-blocks 2 \
-  --pooling-mode mean \
-  --classifier-head linear \
-  --latent-var-reg-weight 0.01 \
-  --latent-var-target 1.0 \
-  --eval-quality-events 2000 \
-  --mlflow-enable \
-  --mlflow-experiment ngt_model
-```
-
-Local MLflow credentials belong in:
-
-```text
-ngt_model/conf/local/credentials.yml
-ctl2_model/conf/local/credentials.yml
-```
-
-These files are ignored by Git and must not be committed.
-
 ## Analysis Notes
 
-Run analyses are stored in `analysis/`. They summarize the important runs, dataset diagnostics, and conclusions without forward-looking planning sections.
-
-Important recent notes:
-
-- `analysis/2026-07-11_updated_collide2v_run.md`
-- `analysis/2026-07-13_mha_eval_quality_analysis.md`
-- `analysis/2026-07-14_mha_l1_100k_eval_quality.md`
-- `analysis/2026-07-21_hh4b_collapse_diagnostics.md`
-- `analysis/2026-07-23_latent_collapse_report.md`
-- `analysis/2026-07-24_latent_collapse_report.md`
-- `analysis/2026-07-28_granular_labels_latent_sweep_best_config.md`
-- `analysis/2026-07-31_superclass_loss_objective_comparison.md`
-
-Presentation materials are kept locally in `presentations/` and ignored by Git.
-
-## Output Policy
-
-Git intentionally ignores local cache and diagnostic-output folders:
+English analysis notes are stored in:
 
 ```text
-ngt_linformer_nodes_aligned_outputs/cache/
-ngt_linformer_nodes_aligned_outputs/diagnostic_notebooks/
-ngt_linformer_nodes_aligned_outputs/diagnostics/
-
-ngt_mha_nodes_aligned_outputs/cache/
-ngt_mha_nodes_aligned_outputs/diagnostic_notebooks/
-ngt_mha_nodes_aligned_outputs/diagnostics/
-
-**/conf/local/credentials.yml
+ctl2_embedding_model/analysis/
 ```
 
-Selected run summaries, plots, CSVs, notebooks, and analysis notes can be versioned as evidence. Large regenerated caches and local credentials should stay out of Git.
+Recent analysis files:
 
-## Current Findings
+- `2026-07-11_updated_collide2v_run.md`
+- `2026-07-13_mha_eval_quality_analysis.md`
+- `2026-07-14_mha_l1_100k_eval_quality.md`
+- `2026-07-21_hh4b_collapse_diagnostics.md`
+- `2026-07-23_latent_collapse_report.md`
+- `2026-07-24_latent_collapse_report.md`
+- `2026-07-28_granular_labels_latent_sweep_best_config.md`
+- `2026-07-31_superclass_loss_objective_comparison.md`
 
-The latest L1-only MHA work shows:
-
-- HH4B is visible against the full SM background, but overlaps significantly with Top-like activity.
-- DY remains one of the most difficult classes and still overlaps with MinBias-like regions.
-- Latent collapse is stable across seeds and is not solved by increasing latent dimension, dataset size, attention depth, or number of heads alone.
-- Mean pooling and a linear classifier head provide a strong supervised baseline.
-- `ff_dim=256` improves HH4B F1 but does not remove low effective dimensionality.
-- A small latent variance regularizer (`latent_var_reg_weight=0.01`) improves effective rank, participation ratio, head-Fisher dimensionality, HH4B F1, DY F1, and eval-quality with only a small accuracy cost.
+Presentation materials are kept locally in `ctl2_embedding_model/presentations/` and ignored by Git.
 
 ## Latent-Collapse Findings (exploratory, controlled tests)
 
-Building on the collapse diagnostics, the latest controlled tests covered three axes: best
-configuration, label granularity, and loss-objective design. These are exploratory results from
-single-setting runs, not a finished conclusion:
+The latest latent-collapse follow-up moved from diagnosing low effective dimensionality to selecting a stronger supervised
+baseline, along three controlled axes. These are single-setting exploratory runs, not a final
+model choice, and are flagged accordingly below:
 
-- **Best configuration**: converged on `latent_dim=64` (up from `32`) as the best balance of HH4B F1,
-  DY F1, and eval-quality across the granular-label sweep, keeping `latent_var_reg_weight=0.01` from
-  the earlier collapse diagnostics. See `analysis/2026-07-28_granular_labels_latent_sweep_best_config.md`.
-- **Label granularity**: splitting `Top`/`WW` into final-state sub-classes made classification harder
-  (accuracy ~0.62 -> ~0.46) but increased effective latent dimensionality well beyond the coarse-label
-  case (effective rank ~10.5 at `latent_dim=32`, ~16.6 at `latent_dim=128`). This supports, but does not
-  prove, the hypothesis that coarse labels contributed to the earlier collapse. A non-monotonic dip at
-  `latent_dim=64` (effective rank 3.07) is unexplained and flagged for a repeat run.
-- **Broader SM superclass benchmark**: expanded from 5 to 10 classes (`MinBias, QCD, DY, Top, W+jets,
-  WW, WZ, ttW, ttZ, HH4B`), giving a more realistic SM background for the HH4B anomaly benchmark. See
-  `analysis/2026-07-31_superclass_loss_objective_comparison.md`.
-- **Six loss-objective variants** (CE + variance, + label smoothing, focal, + SupCon at two strengths,
-  + covariance regularization at two strengths) were compared on this broader benchmark. Covariance-
-  regularized variants reach the highest effective rank (~27-29) and eval-quality (~0.13-0.23), SupCon
-  variants give the best DY F1, and label smoothing gives the highest accuracy but near-zero
-  eval-quality. HH4B F1 stays essentially flat (0.557-0.561) across all six, so no single objective is
-  a clear anomaly-detection win yet — metrics disagree with each other and model selection needs to
-  stay multi-metric.
-- **Reproducibility caveat**: the granular-label sweep and five of the six loss-objective runs currently
-  exist only as reported numbers in the two analysis notes above; only the covariance-0.005 run has an
-  independent output directory on disk. Treat these as directional evidence pending fuller logging.
+- **Best configuration**: converged on `latent_dim=64` (previously `32`), keeping
+  `latent_var_reg_weight=0.01`. `latent_dim=64` was selected for its balance of HH4B F1,
+  DY F1, and eval-quality across the granular-label sweep, not because it maximizes any single metric.
+- **Label granularity**: splitting `Top`/`WW` into final-state sub-classes (`tt_hadronic`,
+  `tt_leptonic`, `tt_semileptonic`, `WW_hadronic`, `WW_leptonic`, `WW_semileptonic`) made
+  classification harder (accuracy ~0.62 -> ~0.46) but raised effective latent dimensionality well
+  beyond the coarse-label case (effective rank ~10.5 at `latent_dim=32`, ~16.6 at `latent_dim=128`).
+  This supports, but does not prove, the idea that coarse labels contributed to the earlier collapse.
+  A non-monotonic dip at `latent_dim=64` (effective rank 3.07) is unexplained and needs a repeat run.
+- **Broader SM superclass benchmark**: expanded the benchmark from 5 to 10 classes (`MinBias, QCD,
+  DY, Top, W+jets, WW, WZ, ttW, ttZ, HH4B`), giving a more realistic SM background against which HH4B
+  is evaluated as the anomaly candidate.
+- **Six loss-objective variants** (CE + variance, + label smoothing, focal, + SupCon at two
+  strengths, + covariance regularization at two strengths) were compared on this broader benchmark.
+  Covariance-regularized variants reach the highest effective rank (~27-29) and eval-quality
+  (~0.13-0.23); SupCon variants give the best DY F1; label smoothing gives the highest accuracy but
+  near-zero eval-quality. HH4B F1 stays essentially flat (0.557-0.561) across all six variants, so no
+  single objective is a clear anomaly-detection win yet, and model selection needs to stay
+  multi-metric rather than optimizing one number.
+- **Reproducibility caveat**: the granular-label sweep and five of the six loss-objective runs
+  currently exist only as reported numbers in the analysis notes above; only the covariance-0.005 run
+  has an independent output directory on disk. Treat these as directional evidence pending fuller
+  logging.
 
-Details, per-run tables, and figure references: `analysis/2026-07-23_latent_collapse_report.md`,
-`analysis/2026-07-28_granular_labels_latent_sweep_best_config.md`, and
+Details, per-run tables, and figure references: `analysis/2026-07-28_granular_labels_latent_sweep_best_config.md`,
 `analysis/2026-07-31_superclass_loss_objective_comparison.md`.
+
+## Safe Output Policy
+
+The repository keeps notebooks, analysis notes, selected CSV/JSON run summaries, and small curated evidence files.
+
+The repository intentionally does not track:
+
+- local credentials,
+- generated caches,
+- model checkpoints,
+- large `.npy` tensors,
+- diagnostic outputs that can be regenerated.
+
+MLflow credentials should stay only in local ignored files such as:
+
+```text
+ctl2_embedding_model/ngt_model/conf/local/credentials.yml
+ctl2_embedding_model/ctl2_model/conf/local/credentials.yml
+```

@@ -1,0 +1,28 @@
+{
+  "scope": "classifier_head",
+  "n_events": 1200,
+  "n_batches": 5,
+  "n_params_scope": 650,
+  "mean_loss": 4.676951974232992,
+  "accuracy": 0.09583333333333334,
+  "fisher_total": 3.8387453706128154,
+  "fisher_effective_rank_entropy": 115.52058731201636,
+  "fisher_participation_ratio": 56.93573153001898,
+  "fisher_participation_ratio_norm": 0.08759343312310612,
+  "fisher_top1_mass": 0.056189112955977255,
+  "fisher_top10_mass": 0.35220759913805344,
+  "fisher_top100_mass": 0.8588179322390611,
+  "fisher_dims_50pct": 21,
+  "fisher_dims_80pct": 75,
+  "fisher_dims_90pct": 130,
+  "fisher_dims_95pct": 198,
+  "active_params_fisher_gt_1pct": 23,
+  "model_path": "ngt_mha_nodes_aligned_outputs/runs/2026-07-30/sm_superclasses_ce_var001_cov0001_100k_latent64/models/mha_nodes_aligned_best.pt",
+  "class_names": [
+    "minbias",
+    "top",
+    "qcd",
+    "dy"
+  ],
+  "n_events_per_class": 2000
+}

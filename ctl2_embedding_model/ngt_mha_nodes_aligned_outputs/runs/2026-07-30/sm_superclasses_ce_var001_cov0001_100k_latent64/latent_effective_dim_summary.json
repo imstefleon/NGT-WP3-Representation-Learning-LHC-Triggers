@@ -1,0 +1,18 @@
+{
+  "n_events": 150000,
+  "latent_dim": 64,
+  "total_variance": 53.928322821877984,
+  "effective_rank_entropy": 29.117841475332884,
+  "participation_ratio": 20.193075149576313,
+  "participation_ratio_norm": 0.3155167992121299,
+  "n_components_50pct": 8,
+  "n_components_80pct": 21,
+  "n_components_90pct": 28,
+  "n_components_95pct": 33,
+  "n_components_99pct": 41,
+  "top1_explained_variance": 0.13513728623786633,
+  "top2_cumulative_explained_variance": 0.2229136205533175,
+  "top5_cumulative_explained_variance": 0.3957081539906379,
+  "top10_cumulative_explained_variance": 0.565178355513986,
+  "top20_cumulative_explained_variance": 0.7894442914588796
+}
