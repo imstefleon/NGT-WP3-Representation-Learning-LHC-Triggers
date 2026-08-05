@@ -28,6 +28,22 @@ MLflow tracking = enabled
 
 The goal was to test whether changing the training objective can reduce latent collapse or improve the representation for anomaly-detection-style evaluation, without changing the architecture.
 
+## Artifact Validation Status
+
+The six run folders contain saved latent arrays, logits, regenerated training histories, Mahalanobis summaries, latent effective-dimensionality diagnostics, and Head-Fisher files. However, the original `run_config.json`, `classification_report_eval.csv`, and `confusion_matrix_eval.csv` files are not present in these six folders.
+
+Therefore:
+
+- Classification metrics in this note come from the unified summary table and recovered log-derived values.
+- Latent effective rank and participation ratio are supported by the saved `latent_effective_dim_summary.json` files.
+- Head-Fisher was recomputed for all six runs using the intended 10-class superclass label set:
+
+```text
+minbias, qcd, dy, top, wjets, ww, wz, ttw, ttz, hh4b
+```
+
+The Head-Fisher values in this note are therefore valid for the 10-class setup.
+
 ## Runs Compared
 
 | Run | Loss objective | Main change |
@@ -52,16 +68,16 @@ The goal was to test whether changing the training objective can reduce latent c
 
 ## Latent and Head-Fisher Diagnostics
 
-| Run | Effective rank | Participation ratio | Head-Fisher effective rank | Head-Fisher participation ratio |
+| Run | Latent effective rank | Latent participation ratio | Head-Fisher effective rank | Head-Fisher participation ratio |
 |---|---:|---:|---:|---:|
-| label smoothing 0.05 + var 0.01 | 11.17 | 8.32 | 20.36 | 10.66 |
-| focal gamma 2.0 + var 0.01 | 8.08 | 5.28 | 13.80 | 6.18 |
-| CE + SupCon 0.05 + var 0.01 | 2.84 | 1.82 | 20.85 | 13.54 |
-| CE + var 0.01 + cov 0.001 | **29.12** | **20.19** | **115.52** | **56.94** |
-| CE + SupCon 0.10 + var 0.01 | 3.57 | 2.27 | 13.86 | 8.90 |
-| CE + var 0.01 + cov 0.005 | 27.47 | 16.42 | 55.92 | 23.69 |
+| label smoothing 0.05 + var 0.01 | 11.17 | 8.32 | 79.63 | 41.61 |
+| focal gamma 2.0 + var 0.01 | 8.08 | 5.28 | 51.63 | 27.32 |
+| CE + SupCon 0.05 + var 0.01 | 2.84 | 1.82 | 23.87 | 13.07 |
+| CE + var 0.01 + cov 0.001 | **29.12** | **20.19** | **445.55** | **302.15** |
+| CE + SupCon 0.10 + var 0.01 | 3.57 | 2.27 | 22.14 | 14.50 |
+| CE + var 0.01 + cov 0.005 | 27.47 | 16.42 | 254.24 | 125.83 |
 
-The diagnostics are now available for all six runs through the saved latent and classifier-head Fisher summaries. The strongest dimensional activation appears in the covariance-regularized runs, especially `cov_weight=0.001`.
+The validated latent and Head-Fisher diagnostics are available for all six runs. Both diagnostics point to the covariance-regularized runs as the strongest dimensional activation, especially `cov_weight=0.001`.
 
 ## Interpretation
 
@@ -93,11 +109,11 @@ This same run also has the strongest dimensional activation:
 ```text
 effective rank = 29.12
 participation ratio = 20.19
-head-Fisher effective rank = 115.52
-head-Fisher participation ratio = 56.94
+head-Fisher effective rank = 445.55
+head-Fisher participation ratio = 302.15
 ```
 
-This is the clearest evidence from the current comparison that covariance regularization can directly fight latent collapse.
+This is the clearest evidence from the current validated diagnostics that covariance regularization can directly fight latent collapse.
 
 ### Best compromise
 
@@ -149,8 +165,8 @@ cov 0.005: eval_quality = 0.1318
 Both covariance runs activated many more dimensions than the baseline, but the weaker covariance penalty was better:
 
 ```text
-cov 0.001: effective rank = 29.12, head-Fisher effective rank = 115.52
-cov 0.005: effective rank = 27.47, head-Fisher effective rank = 55.92
+cov 0.001: effective rank = 29.12, head-Fisher effective rank = 445.55
+cov 0.005: effective rank = 27.47, head-Fisher effective rank = 254.24
 ```
 
 This suggests that simply forcing more dimensions to be active is not sufficient; the active dimensions must preserve physically useful separation. The best result is a moderate covariance penalty, not the strongest one.
@@ -163,7 +179,7 @@ This suggests that simply forcing more dimensions to be active is not sufficient
 - CE + SupCon with `supcon_weight=0.05` is the best compromise between HH4B performance and latent quality.
 - Focal loss is not the strongest candidate in this balanced training setup.
 - Stronger SupCon or covariance weights do not improve the result and can over-regularize the latent space.
-- Covariance regularization is the clearest objective-level intervention against latent collapse in this test.
+- Covariance regularization is the clearest objective-level intervention against latent collapse in both latent and Head-Fisher diagnostics.
 - Label smoothing improves supervised classification but does not improve the anomaly-quality score.
 - SupCon improves DY F1, but does not strongly activate the global latent dimensionality.
 - More active latent dimensions alone are not enough; the dimensions must encode useful physics separation.
