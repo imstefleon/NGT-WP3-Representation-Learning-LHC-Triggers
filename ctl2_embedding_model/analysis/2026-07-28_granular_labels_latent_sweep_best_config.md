@@ -85,10 +85,10 @@ The granular-label experiment was run with `latent_dim = 32, 64, 128`.
 | latent_dim | Accuracy | Macro F1 | DY F1 | HH4B F1 | Eval-quality |
 |---:|---:|---:|---:|---:|---:|
 | 32 | 0.4668 | 0.4575 | 0.4571 | 0.5562 | 0.1697 |
-| 64 | 0.4683 | 0.4632 | 0.5286 | 0.5609 | 0.1709 |
+| 64 | 0.4561 | 0.4465 | 0.4407 | 0.5513 | 0.1828 |
 | 128 | 0.4642 | 0.4553 | 0.4980 | 0.5504 | 0.0008 |
 
-The best classification balance among these three runs is `latent_dim=64`, but the improvement over `latent_dim=32` is small.
+With the updated `latent_dim=64` result, the best classification balance is now `latent_dim=32`. The `latent_dim=64` run has slightly lower classification metrics but a better eval-quality score than `latent_dim=32`.
 
 The 128-dimensional run does not improve classification, despite having much more nominal latent capacity. Its eval-quality score is also unstable and nearly zero, suggesting that the larger latent space is not automatically organized into a better anomaly-separation geometry.
 
@@ -100,10 +100,10 @@ The PCA/effective-rank diagnostics show that adding granular labels activates mo
 |---|---:|---:|---:|---:|---:|
 | 5-class best config | 32 | 6.55 | 4.29 | - | - |
 | granular labels | 32 | 10.49 | 7.13 | 9 | 14 |
-| granular labels | 64 | 3.07 | 1.63 | - | - |
+| granular labels | 64 | 12.10 | 6.77 | 14 | 21 |
 | granular labels | 128 | 16.62 | 9.65 | 17 | 24 |
 
-The `latent_dim=32` and `latent_dim=128` granular runs support the hypothesis that more granular labels activate more latent directions. The `latent_dim=64` run is more mixed: it has the best classification metrics, but its PCA effective rank is lower, indicating that the model may be concentrating useful variance into fewer dominant coordinates.
+All three granular runs support the hypothesis that more granular labels activate more latent directions than the earlier 5-class setup.
 
 ## Head-Fisher Diagnostics
 
@@ -113,7 +113,7 @@ The classifier-head Fisher diagnostics also show that the granular setup activat
 |---|---:|---:|---:|
 | 5-class best config | 32 | 21.04 | 13.57 |
 | granular labels | 32 | 44.99 | 23.53 |
-| granular labels | 64 | 45.87 | 18.65 |
+| granular labels | 64 | 66.48 | 25.01 |
 | granular labels | 128 | 82.26 | 32.63 |
 
 This is an important result: even when classification accuracy is not high, the classifier becomes sensitive to many more latent directions once the labels are more granular.
@@ -126,7 +126,7 @@ The most difficult categories are the granular final states, especially the WW a
 
 - `ww_hadronic`, `ww_semileptonic`, and `tt_semileptonic` have low F1 scores.
 - `hh4b` remains visible, but its F1 drops from approximately `0.72` in the 5-class setup to approximately `0.55-0.56` in the granular setup.
-- `dy` improves in the `latent_dim=64` and `latent_dim=128` granular runs compared with the `latent_dim=32` granular run, but the overall task remains difficult.
+- `dy` is best in the `latent_dim=128` granular run, while the `latent_dim=64` run is lower than both `32` and `128` for DY F1.
 
 This behavior is physically plausible because several granular categories have similar busy L1 topologies and may not be cleanly separable using only the current L1 candidate representation.
 
@@ -134,19 +134,19 @@ This behavior is physically plausible because several granular categories have s
 
 1. Adding granular physics labels does activate more of the latent space.
 
-The 5-class best configuration used an effective rank of about `6.55`. With granular labels, the effective rank rises to `10.49` at `latent_dim=32` and `16.62` at `latent_dim=128`.
+The 5-class best configuration used an effective rank of about `6.55`. With granular labels, the effective rank rises to `10.49` at `latent_dim=32`, `12.10` at `latent_dim=64`, and `16.62` at `latent_dim=128`.
 
 2. The classifier head also uses more dimensions.
 
-Head-Fisher effective rank increases from about `21` in the 5-class setup to about `45` for granular `latent_dim=32` and about `82` for granular `latent_dim=128`.
+Head-Fisher effective rank increases from about `21` in the 5-class setup to about `45` for granular `latent_dim=32`, about `66` for granular `latent_dim=64`, and about `82` for granular `latent_dim=128`.
 
 3. More active latent dimensions do not automatically improve classification.
 
 The 10-class granular task has much lower accuracy and macro F1 than the original 5-class setup. This suggests that the model is using more representational capacity, but the L1-only information may still be insufficient to cleanly separate all final states.
 
-4. `latent_dim=64` is the best granular classification point so far, but only marginally.
+4. There is no single dominant granular configuration yet.
 
-It gives the highest accuracy, macro F1, DY F1, HH4B F1, and eval-quality among the three granular runs. However, the improvement over `latent_dim=32` is small, so it should not yet be treated as a definitive best model.
+The `latent_dim=32` run has the best classification balance among the three granular runs. The `latent_dim=64` run has the best eval-quality score and activates more latent/Fisher structure than `32`, but its classification metrics are lower. The `latent_dim=128` run activates the most dimensions but does not improve classification.
 
 5. `latent_dim=128` activates more dimensions but does not improve the task.
 
@@ -156,4 +156,4 @@ The 128-dimensional model has the largest latent and Fisher effective ranks, but
 
 The granular-label study supports the hypothesis that the latent collapse is partly driven by the supervised label structure. When the number of physics labels increases from 5 to 10, the model uses more latent directions and the classifier-head Fisher spectrum becomes broader.
 
-However, the extra activated dimensions do not directly translate into better classification. The granular final-state task is substantially harder at L1 level, especially for WW and tt subcategories. The current best granular point is `latent_dim=64`, but the difference with `latent_dim=32` is small. The most important result is not that 64 is clearly better, but that label granularity changes the geometry of the representation.
+However, the extra activated dimensions do not directly translate into better classification. The granular final-state task is substantially harder at L1 level, especially for WW and tt subcategories. The most important result is not that a single latent size is clearly best, but that label granularity changes the geometry of the representation and reduces the earlier low-dimensional collapse.
