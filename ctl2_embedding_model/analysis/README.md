@@ -16,7 +16,6 @@ The notes are organized by run date and focus on results, interpretation, and co
 | 2026-07-14 | `2026-07-14_mha_l1_100k_eval_quality.md` | MHA L1-only 100k-per-class run with latent_dim=128 and eval-quality analysis |
 | 2026-07-16 | `2026-07-16_hh4b_latent_dim_sweep.md` | HH4B full-SM latent-dimension sweep and latent-collapse diagnostics |
 | 2026-07-21 | `2026-07-21_hh4b_collapse_diagnostics.md` | PCA, effective rank, Fisher, repeated seeds, dataset-size sweep, and architecture ablations |
-| 2026-07-23 | `2026-07-23_latent_collapse_report.md` | Consolidated latent-collapse diagnostic report |
-| 2026-07-24 | `2026-07-24_latent_collapse_report.md` | Follow-up latent-collapse summary and interpretation |
-| 2026-07-28 | `2026-07-28_granular_labels_latent_sweep_best_config.md` | Granular Top/WW final-state labels, latent-dimension sweep, and best-configuration study |
+| 2026-07-24 | `2026-07-24_latent_collapse_report.md` | Consolidated latent-collapse diagnostic report |
+| 2026-07-28 | `2026-07-28_best_config_finding_and_latent_sweep.md` | Best-configuration finding, granular Top/WW labels, and latent-dimension sweep |
 | 2026-07-31 | `2026-07-31_superclass_loss_objective_comparison.md` | Broader SM superclass benchmark and CrossEntropy-based loss-objective comparison |

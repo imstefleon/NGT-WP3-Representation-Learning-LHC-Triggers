@@ -158,9 +158,8 @@ Recent analysis files:
 - `2026-07-13_mha_eval_quality_analysis.md`
 - `2026-07-14_mha_l1_100k_eval_quality.md`
 - `2026-07-21_hh4b_collapse_diagnostics.md`
-- `2026-07-23_latent_collapse_report.md`
 - `2026-07-24_latent_collapse_report.md`
-- `2026-07-28_granular_labels_latent_sweep_best_config.md`
+- `2026-07-28_best_config_finding_and_latent_sweep.md`
 - `2026-07-31_superclass_loss_objective_comparison.md`
 
 Presentation materials are kept locally in `ctl2_embedding_model/presentations/` and ignored by Git.
@@ -195,7 +194,7 @@ model choice, and are flagged accordingly below:
   has an independent output directory on disk. Treat these as directional evidence pending fuller
   logging.
 
-Details, per-run tables, and figure references: `analysis/2026-07-28_granular_labels_latent_sweep_best_config.md`,
+Details, per-run tables, and figure references: `analysis/2026-07-28_best_config_finding_and_latent_sweep.md`,
 `analysis/2026-07-31_superclass_loss_objective_comparison.md`.
 
 ## Safe Output Policy

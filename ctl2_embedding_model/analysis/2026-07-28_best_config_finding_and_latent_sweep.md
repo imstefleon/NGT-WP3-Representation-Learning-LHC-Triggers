@@ -1,4 +1,4 @@
-# Granular Label Study, Latent Sweep, and Best Configuration
+# Best Configuration Finding and Granular Latent Sweep
 
 ## Scope
 
