@@ -98,7 +98,7 @@ The PCA/effective-rank diagnostics show that adding granular labels activates mo
 
 | Setup | latent_dim | Effective rank | Participation ratio | PCs for 90% variance | PCs for 95% variance |
 |---|---:|---:|---:|---:|---:|
-| 5-class best config | 32 | 6.55 | 4.29 | - | - |
+| 5-class best config | 32 | 6.55 | 4.29 | 6 | 12 |
 | granular labels | 32 | 10.49 | 7.13 | 9 | 14 |
 | granular labels | 64 | 12.10 | 6.77 | 14 | 21 |
 | granular labels | 128 | 16.62 | 9.65 | 17 | 24 |
