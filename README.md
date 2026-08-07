@@ -24,6 +24,8 @@ Current safe baseline:
 - CrossEntropy plus small latent variance regularization was added as the first objective-level anti-collapse test.
 - Notebook paths were updated so notebooks can live inside their workflow output folders.
 - Best-configuration convergence, a granular-label test, a broader SM superclass benchmark, and six loss-objective variants were added to the latent-collapse study.
+- External Higgs-like signal evaluation was added for `HH`, `VBFH`, and `ggH`, comparing both a 4-class model and 10-class superclass models.
+- Presentation PDFs and curated analysis figures are now tracked under `ctl2_embedding_model/presentations/` and `ctl2_embedding_model/analysis/figures/`.
 
 Main current finding:
 
@@ -31,9 +33,12 @@ Main current finding:
 - Mean pooling and linear classifier heads are good supervised baselines.
 - `ff_dim=256` improves HH4B F1 but does not remove low effective dimensionality.
 - A small latent variance regularizer (`lambda=0.01`) improves effective rank, participation ratio, head-Fisher dimensionality, HH4B F1, DY F1, and eval-quality with only a small accuracy cost.
-- The best supervised configuration now uses `latent_dim=64` (selected from the granular-label sweep for its balance of HH4B F1, DY F1, and eval-quality).
+- No single latent dimension wins globally. The current model choice is evaluated using classification metrics, latent effective dimensionality, head-Fisher diagnostics, eval-quality, and external-signal response together.
+- The balanced supervised direction uses `CE + SupCon 0.05 + variance` and is compared at `latent_dim=32,64,128`.
+- The anomaly-oriented direction compares `CE + variance + covariance`, especially at higher latent dimension, because it can activate more latent structure even when classification metrics are similar.
 - More granular physics labels (splitting `Top`/`WW` by final state) increase effective latent dimensionality, supporting the hypothesis that label granularity, not only architecture, shapes the collapse.
-- On a broader 10-class SM superclass benchmark, covariance-regularized objectives raise effective rank and eval-quality the most, but no single loss-objective variant clearly wins on HH4B F1 as well - model selection needs multiple metrics together. See "Latent-Collapse Findings" below for details and caveats.
+- On a broader 10-class SM superclass benchmark, covariance-regularized objectives raise effective rank and eval-quality the most, while SupCon-based balanced models give stronger supervised stability. No single loss-objective variant clearly wins on HH4B F1 alone.
+- External Higgs-like samples are not scored with ordinary accuracy unless they are trained labels. They are evaluated through classifier response, anomaly score, and latent-space mapping.
 
 ## Repository Layout
 
@@ -79,7 +84,7 @@ flowchart TD
     C --> D["Stacked MHA attention blocks<br/>Q/K/V message passing + residuals"]
     D --> E["Event pooling<br/>mean (baseline) or learned attention pooling"]
     E --> F["Post-pool dense stack<br/>Linear + ReLU + Linear + ReLU"]
-    F --> G["Latent embedding<br/>latent_dim = 64 (baseline)<br/>CE + latent_var_reg_weight = 0.01"]
+    F --> G["Latent embedding<br/>latent_dim = 32/64/128 sweeps<br/>CE, SupCon, variance/covariance regularization"]
     G --> H["Classifier head<br/>linear (baseline) or MLP"]
     G --> I["Latent diagnostics<br/>PCA, effective rank, Fisher, eval-quality"]
     H --> J["SM superclasses: MinBias, QCD, DY, Top,<br/>W+jets, WW, WZ, ttW, ttZ + HH4B (signal)"]
@@ -158,12 +163,16 @@ Recent analysis files:
 - `2026-07-13_mha_eval_quality_analysis.md`
 - `2026-07-14_mha_l1_100k_eval_quality.md`
 - `2026-07-21_hh4b_collapse_diagnostics.md`
-- `2026-07-23_latent_collapse_report.md`
 - `2026-07-24_latent_collapse_report.md`
-- `2026-07-28_granular_labels_latent_sweep_best_config.md`
+- `2026-07-28_best_config_finding_and_latent_sweep.md`
 - `2026-07-31_superclass_loss_objective_comparison.md`
+- `2026-08-06_external_higgs_signal_evaluation.md`
 
-Presentation materials are kept locally in `ctl2_embedding_model/presentations/` and ignored by Git.
+Presentation PDFs are stored in:
+
+```text
+ctl2_embedding_model/presentations/
+```
 
 ## Latent-Collapse Findings (exploratory, controlled tests)
 
@@ -171,15 +180,15 @@ The latest latent-collapse follow-up moved from diagnosing low effective dimensi
 baseline, along three controlled axes. These are single-setting exploratory runs, not a final
 model choice, and are flagged accordingly below:
 
-- **Best configuration**: converged on `latent_dim=64` (previously `32`), keeping
-  `latent_var_reg_weight=0.01`. `latent_dim=64` was selected for its balance of HH4B F1,
-  DY F1, and eval-quality across the granular-label sweep, not because it maximizes any single metric.
+- **Best-configuration search**: the current comparison keeps the same MHA architecture and tests
+  `latent_dim=32,64,128` with the balanced objective `CE + SupCon 0.05 + variance`. The result is
+  not a single-metric winner: classification, eval-quality, latent effective rank, and external-signal
+  response must be interpreted together.
 - **Label granularity**: splitting `Top`/`WW` into final-state sub-classes (`tt_hadronic`,
   `tt_leptonic`, `tt_semileptonic`, `WW_hadronic`, `WW_leptonic`, `WW_semileptonic`) made
   classification harder (accuracy ~0.62 -> ~0.46) but raised effective latent dimensionality well
-  beyond the coarse-label case (effective rank ~10.5 at `latent_dim=32`, ~16.6 at `latent_dim=128`).
-  This supports, but does not prove, the idea that coarse labels contributed to the earlier collapse.
-  A non-monotonic dip at `latent_dim=64` (effective rank 3.07) is unexplained and needs a repeat run.
+  beyond the coarse-label case. This supports, but does not prove, the idea that coarse labels
+  contributed to the earlier collapse.
 - **Broader SM superclass benchmark**: expanded the benchmark from 5 to 10 classes (`MinBias, QCD,
   DY, Top, W+jets, WW, WZ, ttW, ttZ, HH4B`), giving a more realistic SM background against which HH4B
   is evaluated as the anomaly candidate.
@@ -190,13 +199,14 @@ model choice, and are flagged accordingly below:
   near-zero eval-quality. HH4B F1 stays essentially flat (0.557-0.561) across all six variants, so no
   single objective is a clear anomaly-detection win yet, and model selection needs to stay
   multi-metric rather than optimizing one number.
-- **Reproducibility caveat**: the granular-label sweep and five of the six loss-objective runs
-  currently exist only as reported numbers in the analysis notes above; only the covariance-0.005 run
-  has an independent output directory on disk. Treat these as directional evidence pending fuller
-  logging.
+- **External Higgs-like signal evaluation**: `HH`, `VBFH`, and `ggH` were evaluated as unseen
+  Higgs-like samples. The 4-class model mostly maps them into known SM classes such as Top/QCD,
+  while the 10-class models provide a more structured response across SM superclasses and HH4B.
+  These tests answer how unseen signals are represented, not a standard per-class accuracy question.
 
-Details, per-run tables, and figure references: `analysis/2026-07-28_granular_labels_latent_sweep_best_config.md`,
-`analysis/2026-07-31_superclass_loss_objective_comparison.md`.
+Details, per-run tables, and figure references: `analysis/2026-07-28_best_config_finding_and_latent_sweep.md`,
+`analysis/2026-07-31_superclass_loss_objective_comparison.md`,
+`analysis/2026-08-06_external_higgs_signal_evaluation.md`.
 
 ## Safe Output Policy
 
@@ -208,7 +218,8 @@ The repository intentionally does not track:
 - generated caches,
 - model checkpoints,
 - large `.npy` tensors,
-- diagnostic outputs that can be regenerated.
+- diagnostic outputs that can be regenerated,
+- local editable presentation drafts unless explicitly curated.
 
 MLflow credentials should stay only in local ignored files such as:
 
