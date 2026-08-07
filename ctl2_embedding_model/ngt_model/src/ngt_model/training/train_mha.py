@@ -1,6 +1,21 @@
 #!/usr/bin/env python3
 """
 Train the PyTorch MHA embedding model on Collide-2V L1 candidate tensors.
+
+This script is the non-notebook training entry point for the MHA architecture.
+It is intentionally close to the MHA notebook defaults, but uses a larger
+latent space by default (`latent_dim=128`) and can be launched with `torchrun`
+for DistributedDataParallel training.
+
+Examples:
+    # Single-GPU quick check
+    python train_mha.py --n-events-per-class 1000 --epochs 3 --device cuda
+
+    # Current larger test, latent_dim=128
+    python train_mha.py --n-events-per-class 100000 --epochs 50 --device cuda
+
+    # Distributed, if the environment exposes multiple GPUs
+    torchrun --nproc_per_node=2 train_mha.py --n-events-per-class 100000 --epochs 50
 """
 
 from __future__ import annotations
@@ -77,21 +92,33 @@ def parse_args():
     parser.add_argument("--pooling-mode", default="attention", choices=["mean", "attention"])
     parser.add_argument("--classifier-head", default="mlp", choices=["mlp", "linear"])
     parser.add_argument("--loss-mode", default="ce", choices=["ce", "label_smoothing", "focal"],
-                        help="Supervised classification loss. FPGA inference is unchanged.")
+                        help="Classification loss: standard CE, label-smoothed CE, or focal loss.")
     parser.add_argument("--label-smoothing", type=float, default=0.0,
                         help="Smoothing factor used when --loss-mode=label_smoothing.")
     parser.add_argument("--focal-gamma", type=float, default=2.0,
                         help="Focusing gamma used when --loss-mode=focal.")
     parser.add_argument("--supcon-weight", type=float, default=0.0,
-                        help="Weight for supervised contrastive loss on the latent embedding. 0 disables it.")
+                        help="Weight for supervised contrastive loss on the latent vectors. 0 disables it.")
     parser.add_argument("--supcon-temperature", type=float, default=0.1,
-                        help="Temperature for supervised contrastive latent loss.")
+                        help="Temperature for supervised contrastive loss.")
     parser.add_argument("--latent-var-reg-weight", type=float, default=0.0,
                         help="Weight for latent variance regularization. 0 disables it.")
     parser.add_argument("--latent-var-target", type=float, default=1.0,
                         help="Minimum per-dimension latent std target for variance regularization.")
     parser.add_argument("--latent-cov-reg-weight", type=float, default=0.0,
-                        help="Weight for latent covariance decorrelation regularization. 0 disables it.")
+                        help="Weight for off-diagonal latent covariance regularization. 0 disables it.")
+    parser.add_argument("--vicreg-weight", type=float, default=0.0,
+                        help="Weight for VICReg-style two-view latent regularization. 0 disables it.")
+    parser.add_argument("--vicreg-sim-weight", type=float, default=25.0,
+                        help="VICReg invariance/MSE term weight.")
+    parser.add_argument("--vicreg-var-weight", type=float, default=25.0,
+                        help="VICReg variance term weight.")
+    parser.add_argument("--vicreg-cov-weight", type=float, default=1.0,
+                        help="VICReg covariance decorrelation term weight.")
+    parser.add_argument("--vicreg-noise-std", type=float, default=0.01,
+                        help="Gaussian noise std applied to continuous L1 features for VICReg views.")
+    parser.add_argument("--vicreg-drop-prob", type=float, default=0.05,
+                        help="Per-candidate dropout probability for VICReg views.")
     parser.add_argument("--augmentation-copies", type=int, default=1)
     parser.add_argument("--class-weight-mode", default="none", choices=["none", "balanced"])
     parser.add_argument("--seed", type=int, default=42)
@@ -202,62 +229,109 @@ def latent_variance_regularization(latent: torch.Tensor, target_std: float) -> t
 def latent_covariance_regularization(latent: torch.Tensor) -> torch.Tensor:
     if latent.shape[0] <= 1 or latent.shape[1] <= 1:
         return latent.new_tensor(0.0)
-    z = latent - latent.mean(dim=0, keepdim=True)
-    cov = (z.T @ z) / max(latent.shape[0] - 1, 1)
-    off_diag = cov - torch.diag(torch.diagonal(cov))
-    return off_diag.pow(2).sum() / latent.shape[1]
+    centered = latent - latent.mean(dim=0, keepdim=True)
+    cov = centered.T @ centered / max(latent.shape[0] - 1, 1)
+    off_diag = cov - torch.diag(torch.diag(cov))
+    return off_diag.pow(2).mean()
 
 
 def supervised_contrastive_loss(
     latent: torch.Tensor,
-    targets: torch.Tensor,
-    temperature: float,
+    labels: torch.Tensor,
+    temperature: float = 0.1,
 ) -> torch.Tensor:
     if latent.shape[0] <= 1:
         return latent.new_tensor(0.0)
+
     z = F.normalize(latent, dim=1)
-    logits = (z @ z.T) / max(temperature, 1e-6)
+    logits = (z @ z.T) / max(float(temperature), 1e-6)
     logits = logits - logits.max(dim=1, keepdim=True).values.detach()
 
-    self_mask = torch.eye(latent.shape[0], dtype=torch.bool, device=latent.device)
-    positive_mask = (targets[:, None] == targets[None, :]) & ~self_mask
-    valid = positive_mask.sum(dim=1) > 0
-    if not bool(valid.any()):
+    n = labels.shape[0]
+    eye = torch.eye(n, dtype=torch.bool, device=labels.device)
+    valid_pair_mask = ~eye
+    positive_mask = labels[:, None].eq(labels[None, :]) & valid_pair_mask
+
+    exp_logits = torch.exp(logits) * valid_pair_mask.float()
+    log_prob = logits - torch.log(exp_logits.sum(dim=1, keepdim=True).clamp_min(1e-12))
+
+    positive_counts = positive_mask.sum(dim=1)
+    valid_rows = positive_counts > 0
+    if not valid_rows.any():
         return latent.new_tensor(0.0)
 
-    logits_masked = logits.masked_fill(self_mask, float("-inf"))
-    log_prob = logits_masked - torch.logsumexp(logits_masked, dim=1, keepdim=True)
-    positive_log_prob = log_prob.masked_fill(~positive_mask, 0.0)
-    per_anchor = -positive_log_prob.sum(dim=1) / positive_mask.sum(dim=1).clamp_min(1)
-    return per_anchor[valid].mean()
+    mean_log_prob_pos = (
+        (log_prob * positive_mask.float()).sum(dim=1)[valid_rows]
+        / positive_counts[valid_rows].float()
+    )
+    return -mean_log_prob_pos.mean()
+
+
+def make_vicreg_view(
+    x: torch.Tensor,
+    noise_std: float,
+    drop_prob: float,
+    n_continuous_features: int = 4,
+) -> torch.Tensor:
+    """Create a lightweight augmented view of preprocessed L1 candidate tensors."""
+    view = x.clone()
+    valid_mask = torch.any(x != 0, dim=-1, keepdim=True)
+
+    if noise_std > 0:
+        n_cont = min(n_continuous_features, view.shape[-1])
+        noise = torch.randn_like(view[..., :n_cont]) * float(noise_std)
+        view[..., :n_cont] = view[..., :n_cont] + noise * valid_mask.to(view.dtype)
+
+    if drop_prob > 0:
+        keep = (torch.rand(view.shape[:-1], device=view.device) > float(drop_prob)).unsqueeze(-1)
+        view = view * (keep | ~valid_mask).to(view.dtype)
+
+    return view
+
+
+def vicreg_loss(
+    z1: torch.Tensor,
+    z2: torch.Tensor,
+    sim_weight: float = 25.0,
+    var_weight: float = 25.0,
+    cov_weight: float = 1.0,
+    target_std: float = 1.0,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    sim_loss = F.mse_loss(z1, z2)
+    var_loss = 0.5 * (
+        latent_variance_regularization(z1, target_std)
+        + latent_variance_regularization(z2, target_std)
+    )
+    cov_loss = 0.5 * (
+        latent_covariance_regularization(z1)
+        + latent_covariance_regularization(z2)
+    )
+    total = sim_weight * sim_loss + var_weight * var_loss + cov_weight * cov_loss
+    return total, sim_loss, var_loss, cov_loss
 
 
 def classification_loss(
     logits: torch.Tensor,
-    targets: torch.Tensor,
+    labels: torch.Tensor,
     class_weights: Optional[torch.Tensor],
     loss_mode: str,
     label_smoothing: float,
     focal_gamma: float,
 ) -> torch.Tensor:
-    if loss_mode == "ce":
-        return F.cross_entropy(logits, targets, weight=class_weights)
     if loss_mode == "label_smoothing":
         return F.cross_entropy(
             logits,
-            targets,
+            labels,
             weight=class_weights,
             label_smoothing=label_smoothing,
         )
+
     if loss_mode == "focal":
-        log_probs = F.log_softmax(logits, dim=1)
-        log_pt = log_probs.gather(1, targets[:, None]).squeeze(1)
-        pt = log_pt.exp().clamp(min=1e-8, max=1.0)
-        focal = (1.0 - pt).pow(focal_gamma)
-        if class_weights is not None:
-            focal = focal * class_weights[targets]
-        return -(focal * log_pt).mean()
-    raise ValueError(f"Unknown loss_mode={loss_mode}")
+        ce = F.cross_entropy(logits, labels, weight=class_weights, reduction="none")
+        pt = torch.exp(-ce)
+        return ((1.0 - pt).pow(focal_gamma) * ce).mean()
+
+    return F.cross_entropy(logits, labels, weight=class_weights)
 
 
 def run_epoch(
@@ -270,11 +344,17 @@ def run_epoch(
     latent_var_reg_weight: float = 0.0,
     latent_var_target: float = 1.0,
     latent_cov_reg_weight: float = 0.0,
-    supcon_weight: float = 0.0,
-    supcon_temperature: float = 0.1,
     loss_mode: str = "ce",
     label_smoothing: float = 0.0,
     focal_gamma: float = 2.0,
+    supcon_weight: float = 0.0,
+    supcon_temperature: float = 0.1,
+    vicreg_weight: float = 0.0,
+    vicreg_sim_weight: float = 25.0,
+    vicreg_var_weight: float = 25.0,
+    vicreg_cov_weight: float = 1.0,
+    vicreg_noise_std: float = 0.01,
+    vicreg_drop_prob: float = 0.05,
 ):
     is_train = optimizer is not None
     model.train(is_train)
@@ -282,7 +362,11 @@ def run_epoch(
     ce_loss_sum = 0.0
     var_reg_sum = 0.0
     cov_reg_sum = 0.0
-    supcon_loss_sum = 0.0
+    supcon_sum = 0.0
+    vicreg_sum = 0.0
+    vicreg_sim_sum = 0.0
+    vicreg_var_sum = 0.0
+    vicreg_cov_sum = 0.0
     correct = 0.0
     total = 0.0
 
@@ -295,20 +379,38 @@ def run_epoch(
                 out["logits"],
                 yb,
                 class_weights,
-                loss_mode=loss_mode,
-                label_smoothing=label_smoothing,
-                focal_gamma=focal_gamma,
+                loss_mode,
+                label_smoothing,
+                focal_gamma,
             )
             var_reg = latent_variance_regularization(out["latent"], latent_var_target)
             cov_reg = latent_covariance_regularization(out["latent"])
             supcon = supervised_contrastive_loss(out["latent"], yb, supcon_temperature)
-            loss = ce_loss
-            if latent_var_reg_weight > 0:
-                loss = loss + latent_var_reg_weight * var_reg
-            if latent_cov_reg_weight > 0:
-                loss = loss + latent_cov_reg_weight * cov_reg
-            if supcon_weight > 0:
-                loss = loss + supcon_weight * supcon
+            if is_train and vicreg_weight > 0:
+                view1 = make_vicreg_view(xb, vicreg_noise_std, vicreg_drop_prob)
+                view2 = make_vicreg_view(xb, vicreg_noise_std, vicreg_drop_prob)
+                z1 = model(view1)["latent"]
+                z2 = model(view2)["latent"]
+                vicreg, vicreg_sim, vicreg_var, vicreg_cov = vicreg_loss(
+                    z1,
+                    z2,
+                    sim_weight=vicreg_sim_weight,
+                    var_weight=vicreg_var_weight,
+                    cov_weight=vicreg_cov_weight,
+                    target_std=latent_var_target,
+                )
+            else:
+                vicreg = out["latent"].new_tensor(0.0)
+                vicreg_sim = out["latent"].new_tensor(0.0)
+                vicreg_var = out["latent"].new_tensor(0.0)
+                vicreg_cov = out["latent"].new_tensor(0.0)
+            loss = (
+                ce_loss
+                + (latent_var_reg_weight * var_reg if latent_var_reg_weight > 0 else 0.0)
+                + (latent_cov_reg_weight * cov_reg if latent_cov_reg_weight > 0 else 0.0)
+                + (supcon_weight * supcon if supcon_weight > 0 else 0.0)
+                + (vicreg_weight * vicreg if vicreg_weight > 0 else 0.0)
+            )
             if is_train:
                 optimizer.zero_grad(set_to_none=True)
                 loss.backward()
@@ -319,7 +421,11 @@ def run_epoch(
         ce_loss_sum += float(ce_loss.item()) * bs
         var_reg_sum += float(var_reg.item()) * bs
         cov_reg_sum += float(cov_reg.item()) * bs
-        supcon_loss_sum += float(supcon.item()) * bs
+        supcon_sum += float(supcon.item()) * bs
+        vicreg_sum += float(vicreg.item()) * bs
+        vicreg_sim_sum += float(vicreg_sim.item()) * bs
+        vicreg_var_sum += float(vicreg_var.item()) * bs
+        vicreg_cov_sum += float(vicreg_cov.item()) * bs
         correct += float((out["logits"].argmax(dim=1) == yb).sum().item())
         total += float(bs)
 
@@ -327,8 +433,12 @@ def run_epoch(
     ce_loss, _ = metric_reduce(ce_loss_sum, correct, total, device, distributed)
     var_reg, _ = metric_reduce(var_reg_sum, correct, total, device, distributed)
     cov_reg, _ = metric_reduce(cov_reg_sum, correct, total, device, distributed)
-    supcon_loss, _ = metric_reduce(supcon_loss_sum, correct, total, device, distributed)
-    return loss, acc, ce_loss, var_reg, cov_reg, supcon_loss
+    supcon, _ = metric_reduce(supcon_sum, correct, total, device, distributed)
+    vicreg, _ = metric_reduce(vicreg_sum, correct, total, device, distributed)
+    vicreg_sim, _ = metric_reduce(vicreg_sim_sum, correct, total, device, distributed)
+    vicreg_var, _ = metric_reduce(vicreg_var_sum, correct, total, device, distributed)
+    vicreg_cov, _ = metric_reduce(vicreg_cov_sum, correct, total, device, distributed)
+    return loss, acc, ce_loss, var_reg, cov_reg, supcon, vicreg, vicreg_sim, vicreg_var, vicreg_cov
 
 
 @torch.no_grad()
@@ -460,6 +570,12 @@ def setup_mlflow(args, project: Path, config: dict):
         "latent_var_reg_weight": args.latent_var_reg_weight,
         "latent_var_target": args.latent_var_target,
         "latent_cov_reg_weight": args.latent_cov_reg_weight,
+        "vicreg_weight": args.vicreg_weight,
+        "vicreg_sim_weight": args.vicreg_sim_weight,
+        "vicreg_var_weight": args.vicreg_var_weight,
+        "vicreg_cov_weight": args.vicreg_cov_weight,
+        "vicreg_noise_std": args.vicreg_noise_std,
+        "vicreg_drop_prob": args.vicreg_drop_prob,
         "augmentation_copies": args.augmentation_copies,
         "class_weight_mode": args.class_weight_mode,
         "seed": args.seed,
@@ -495,6 +611,11 @@ def main():
             print(
                 f"latent_dim={args.latent_dim} ff_dim={args.ff_dim} "
                 f"num_heads={args.num_heads} num_attention_blocks={args.num_attention_blocks}"
+            )
+            print(
+                f"loss_mode={args.loss_mode} latent_var_weight={args.latent_var_reg_weight} "
+                f"latent_cov_weight={args.latent_cov_reg_weight} supcon_weight={args.supcon_weight} "
+                f"vicreg_weight={args.vicreg_weight}"
             )
             print(f"class_names={class_names}")
             if args.mlflow_enable:
@@ -621,29 +742,63 @@ def main():
             if train_sampler is not None:
                 train_sampler.set_epoch(epoch)
             t0 = time.time()
-            train_loss, train_acc, train_ce_loss, train_var_reg, train_cov_reg, train_supcon_loss = run_epoch(
+            (
+                train_loss,
+                train_acc,
+                train_ce_loss,
+                train_var_reg,
+                train_cov_reg,
+                train_supcon,
+                train_vicreg,
+                train_vicreg_sim,
+                train_vicreg_var,
+                train_vicreg_cov,
+            ) = run_epoch(
                 model_for_train, train_loader, device, class_weights=class_weights,
                 optimizer=optimizer, distributed=distributed,
                 latent_var_reg_weight=args.latent_var_reg_weight,
                 latent_var_target=args.latent_var_target,
                 latent_cov_reg_weight=args.latent_cov_reg_weight,
-                supcon_weight=args.supcon_weight,
-                supcon_temperature=args.supcon_temperature,
                 loss_mode=args.loss_mode,
                 label_smoothing=args.label_smoothing,
                 focal_gamma=args.focal_gamma,
+                supcon_weight=args.supcon_weight,
+                supcon_temperature=args.supcon_temperature,
+                vicreg_weight=args.vicreg_weight,
+                vicreg_sim_weight=args.vicreg_sim_weight,
+                vicreg_var_weight=args.vicreg_var_weight,
+                vicreg_cov_weight=args.vicreg_cov_weight,
+                vicreg_noise_std=args.vicreg_noise_std,
+                vicreg_drop_prob=args.vicreg_drop_prob,
             )
-            val_loss, val_acc, val_ce_loss, val_var_reg, val_cov_reg, val_supcon_loss = run_epoch(
+            (
+                val_loss,
+                val_acc,
+                val_ce_loss,
+                val_var_reg,
+                val_cov_reg,
+                val_supcon,
+                val_vicreg,
+                val_vicreg_sim,
+                val_vicreg_var,
+                val_vicreg_cov,
+            ) = run_epoch(
                 model_for_train, val_loader, device, class_weights=class_weights,
                 optimizer=None, distributed=distributed,
                 latent_var_reg_weight=args.latent_var_reg_weight,
                 latent_var_target=args.latent_var_target,
                 latent_cov_reg_weight=args.latent_cov_reg_weight,
-                supcon_weight=args.supcon_weight,
-                supcon_temperature=args.supcon_temperature,
                 loss_mode=args.loss_mode,
                 label_smoothing=args.label_smoothing,
                 focal_gamma=args.focal_gamma,
+                supcon_weight=args.supcon_weight,
+                supcon_temperature=args.supcon_temperature,
+                vicreg_weight=args.vicreg_weight,
+                vicreg_sim_weight=args.vicreg_sim_weight,
+                vicreg_var_weight=args.vicreg_var_weight,
+                vicreg_cov_weight=args.vicreg_cov_weight,
+                vicreg_noise_std=args.vicreg_noise_std,
+                vicreg_drop_prob=args.vicreg_drop_prob,
             )
             elapsed = time.time() - t0
             row = {
@@ -653,13 +808,21 @@ def main():
                 "train_ce_loss": train_ce_loss,
                 "train_latent_var_reg": train_var_reg,
                 "train_latent_cov_reg": train_cov_reg,
-                "train_supcon_loss": train_supcon_loss,
+                "train_supcon_loss": train_supcon,
+                "train_vicreg_loss": train_vicreg,
+                "train_vicreg_sim_loss": train_vicreg_sim,
+                "train_vicreg_var_loss": train_vicreg_var,
+                "train_vicreg_cov_loss": train_vicreg_cov,
                 "val_loss": val_loss,
                 "val_acc": val_acc,
                 "val_ce_loss": val_ce_loss,
                 "val_latent_var_reg": val_var_reg,
                 "val_latent_cov_reg": val_cov_reg,
-                "val_supcon_loss": val_supcon_loss,
+                "val_supcon_loss": val_supcon,
+                "val_vicreg_loss": val_vicreg,
+                "val_vicreg_sim_loss": val_vicreg_sim,
+                "val_vicreg_var_loss": val_vicreg_var,
+                "val_vicreg_cov_loss": val_vicreg_cov,
                 "elapsed_s": elapsed,
             }
             history.append(row)
@@ -669,7 +832,8 @@ def main():
                     f"train_loss={train_loss:.4f} train_acc={train_acc:.4f} "
                     f"val_loss={val_loss:.4f} val_acc={val_acc:.4f} "
                     f"var_reg={val_var_reg:.4f} cov_reg={val_cov_reg:.4f} "
-                    f"supcon={val_supcon_loss:.4f} "
+                    f"supcon={val_supcon:.4f} "
+                    f"vicreg={train_vicreg:.4f} "
                     f"{elapsed:.1f}s",
                     flush=True,
                 )
@@ -681,13 +845,21 @@ def main():
                             "train_ce_loss": train_ce_loss,
                             "train_latent_var_reg": train_var_reg,
                             "train_latent_cov_reg": train_cov_reg,
-                            "train_supcon_loss": train_supcon_loss,
+                            "train_supcon_loss": train_supcon,
+                            "train_vicreg_loss": train_vicreg,
+                            "train_vicreg_sim_loss": train_vicreg_sim,
+                            "train_vicreg_var_loss": train_vicreg_var,
+                            "train_vicreg_cov_loss": train_vicreg_cov,
                             "val_loss": val_loss,
                             "val_acc": val_acc,
                             "val_ce_loss": val_ce_loss,
                             "val_latent_var_reg": val_var_reg,
                             "val_latent_cov_reg": val_cov_reg,
-                            "val_supcon_loss": val_supcon_loss,
+                            "val_supcon_loss": val_supcon,
+                            "val_vicreg_loss": val_vicreg,
+                            "val_vicreg_sim_loss": val_vicreg_sim,
+                            "val_vicreg_var_loss": val_vicreg_var,
+                            "val_vicreg_cov_loss": val_vicreg_cov,
                             "epoch_elapsed_s": elapsed,
                         },
                         step=epoch,
@@ -716,6 +888,7 @@ def main():
             Z_eval, logits_eval = extract_outputs(model, X_eval, y_eval, device, args.batch_size)
             np.save(project / "eval_latents.npy", Z_eval)
             np.save(project / "eval_logits.npy", logits_eval)
+            np.save(project / "eval_labels.npy", y_eval)
 
             pred_eval = logits_eval.argmax(axis=1)
             report = make_classification_report(y_eval, pred_eval, class_names)
@@ -737,6 +910,7 @@ def main():
                 mlflow_client.log_artifact(str(project / "training_history.csv"))
                 mlflow_client.log_artifact(str(project / "classification_report_eval.csv"))
                 mlflow_client.log_artifact(str(project / "confusion_matrix_eval.csv"))
+                mlflow_client.log_artifact(str(project / "eval_labels.npy"))
 
             if args.eval_quality_events > 0:
                 from ngt_model.evaluation.eval_quality_collide2v import EvalCollide2V

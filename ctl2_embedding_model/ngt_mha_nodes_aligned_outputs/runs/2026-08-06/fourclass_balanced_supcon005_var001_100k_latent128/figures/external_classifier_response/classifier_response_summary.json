@@ -1,0 +1,56 @@
+{
+  "model_label": "fourclass_balanced_supcon005_var001_100k_latent128",
+  "run_dir": "ngt_mha_nodes_aligned_outputs/runs/2026-08-06/fourclass_balanced_supcon005_var001_100k_latent128",
+  "model": "ngt_mha_nodes_aligned_outputs/runs/2026-08-06/fourclass_balanced_supcon005_var001_100k_latent128/models/mha_nodes_aligned_best.pt",
+  "trained_classes": [
+    "minbias",
+    "qcd",
+    "dy",
+    "top"
+  ],
+  "external_classes": [
+    "hh4b",
+    "hh",
+    "vbfh",
+    "ggh"
+  ],
+  "n_events_per_class": 2000,
+  "summary": [
+    {
+      "true_external_class": "hh4b",
+      "n_events": 2000,
+      "top_predicted_class": "top",
+      "top_fraction": 0.94,
+      "hh4b_tag_rate": NaN,
+      "mean_hh4b_probability": NaN,
+      "true_class_recall_if_trained": NaN
+    },
+    {
+      "true_external_class": "hh",
+      "n_events": 2000,
+      "top_predicted_class": "top",
+      "top_fraction": 0.835,
+      "hh4b_tag_rate": NaN,
+      "mean_hh4b_probability": NaN,
+      "true_class_recall_if_trained": NaN
+    },
+    {
+      "true_external_class": "vbfh",
+      "n_events": 2000,
+      "top_predicted_class": "top",
+      "top_fraction": 0.485,
+      "hh4b_tag_rate": NaN,
+      "mean_hh4b_probability": NaN,
+      "true_class_recall_if_trained": NaN
+    },
+    {
+      "true_external_class": "ggh",
+      "n_events": 2000,
+      "top_predicted_class": "qcd",
+      "top_fraction": 0.4125,
+      "hh4b_tag_rate": NaN,
+      "mean_hh4b_probability": NaN,
+      "true_class_recall_if_trained": NaN
+    }
+  ]
+}

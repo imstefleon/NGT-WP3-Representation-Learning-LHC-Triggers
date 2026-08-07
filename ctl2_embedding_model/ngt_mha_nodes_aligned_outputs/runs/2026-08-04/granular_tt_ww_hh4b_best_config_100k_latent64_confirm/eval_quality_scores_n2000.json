@@ -1,0 +1,41 @@
+{
+  "score": 0.18283914439621604,
+  "align_loss": 0.796776,
+  "pr": 63.0378,
+  "pr_norm": 0.985,
+  "gmm_gap": 59.4127,
+  "mahalanobis": 2.3499,
+  "background_classes": [
+    "minbias",
+    "qcd",
+    "dy",
+    "tt_hadronic",
+    "tt_leptonic",
+    "tt_semileptonic",
+    "ww_hadronic",
+    "ww_leptonic",
+    "ww_semileptonic"
+  ],
+  "anomaly_class": "hh4b",
+  "class_names": [
+    "minbias",
+    "qcd",
+    "dy",
+    "tt_hadronic",
+    "tt_leptonic",
+    "tt_semileptonic",
+    "ww_hadronic",
+    "ww_leptonic",
+    "ww_semileptonic",
+    "hh4b"
+  ],
+  "n_events_per_class": 2000,
+  "n_eval_events": 3000,
+  "align_loss_norm": 0.2032,
+  "pr_norm_norm": 0.9847,
+  "gmm_gap_norm": 0.1188,
+  "md_norm": 0.047,
+  "n_params": 177226,
+  "latent_dim": 64,
+  "n_pid_classes": 20
+}

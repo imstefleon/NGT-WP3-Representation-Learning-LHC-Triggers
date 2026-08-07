@@ -1,0 +1,4 @@
+latent_dim,effective_rank_entropy,participation_ratio
+32,10.4921,7.1252
+64,12.1011,6.772
+128,16.6246,9.6452

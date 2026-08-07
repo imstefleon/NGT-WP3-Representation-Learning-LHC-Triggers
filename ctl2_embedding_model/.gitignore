@@ -15,7 +15,7 @@ ngt_linformer_nodes_aligned_outputs/runs/**/models/
 ngt_mha_nodes_aligned_outputs/runs/**/*.npy
 ngt_mha_nodes_aligned_outputs/runs/**/models/
 
-# Live summary can include in-progress runs; commit the complete-only table instead.
+# Live/in-progress summary artifacts.
 ngt_mha_nodes_aligned_outputs/scale_tests/unified_experiment_summary.csv
 ngt_mha_nodes_aligned_outputs/scale_tests/*.log
 
@@ -23,8 +23,7 @@ ngt_mha_nodes_aligned_outputs/scale_tests/*.log
 ngt_mha_nodes_aligned_outputs/scale_tests/unified_experiment_summary_complete_only.before_log_fill.csv
 ngt_mha_nodes_aligned_outputs/scale_tests/unified_experiment_summary_complete_only.before_nparams_log_fill.csv
 ngt_mha_nodes_aligned_outputs/scale_tests/unified_experiment_summary_complete_only.before_missing_run_fill.csv
-
-presentations/
+ngt_mha_nodes_aligned_outputs/scale_tests/unified_experiment_summary_complete_only.before_*.csv
 
 __pycache__/
 *.pyc

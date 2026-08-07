@@ -1,0 +1,11 @@
+,pred_minbias,pred_qcd,pred_dy,pred_tt_hadronic,pred_tt_leptonic,pred_tt_semileptonic,pred_ww_hadronic,pred_ww_leptonic,pred_ww_semileptonic,pred_hh4b
+true_minbias,10685,2002,2260,0,0,0,25,9,7,12
+true_qcd,3536,7931,1541,508,9,22,973,60,168,252
+true_dy,7062,2063,5419,16,21,3,64,210,122,20
+true_tt_hadronic,6,369,7,8941,81,279,2540,42,210,2525
+true_tt_leptonic,10,96,19,633,5594,2350,293,4002,1062,941
+true_tt_semileptonic,2,190,11,2625,1461,5421,1117,706,1912,1555
+true_ww_hadronic,135,1708,88,5428,61,186,4529,76,430,2359
+true_ww_leptonic,52,230,95,281,3587,1262,316,6615,1670,892
+true_ww_semileptonic,121,760,114,1420,1079,3234,1535,1467,3741,1529
+true_hh4b,37,273,36,3060,119,177,1309,202,242,9545

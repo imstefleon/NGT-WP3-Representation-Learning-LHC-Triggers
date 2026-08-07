@@ -1,0 +1,5 @@
+true_external_class,n_events,top_predicted_class,top_fraction,hh4b_tag_rate,mean_hh4b_probability,true_class_recall_if_trained
+hh4b,2000,hh4b,0.573,0.573,0.38114070892333984,0.573
+hh,2000,top,0.2595,0.152,0.13032472133636475,
+vbfh,2000,wz,0.398,0.018,0.03791797161102295,
+ggh,2000,wz,0.279,0.0125,0.027494894340634346,

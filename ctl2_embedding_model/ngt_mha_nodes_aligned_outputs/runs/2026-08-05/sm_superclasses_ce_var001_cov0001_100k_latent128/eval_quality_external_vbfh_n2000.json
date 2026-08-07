@@ -1,0 +1,41 @@
+{
+  "score": 0.22271610745474857,
+  "align_loss": 0.836817,
+  "pr": 49.5352,
+  "pr_norm": 0.387,
+  "gmm_gap": 4953.3341,
+  "mahalanobis": 1.9726,
+  "background_classes": [
+    "minbias",
+    "qcd",
+    "dy",
+    "top",
+    "wjets",
+    "ww",
+    "wz",
+    "ttw",
+    "ttz"
+  ],
+  "anomaly_class": "vbfh",
+  "class_names": [
+    "minbias",
+    "qcd",
+    "dy",
+    "top",
+    "wjets",
+    "ww",
+    "wz",
+    "ttw",
+    "ttz",
+    "vbfh"
+  ],
+  "n_events_per_class": 2000,
+  "n_eval_events": 3000,
+  "align_loss_norm": 0.1632,
+  "pr_norm_norm": 0.3822,
+  "gmm_gap_norm": 1.0,
+  "md_norm": 0.0395,
+  "n_params": 186122,
+  "latent_dim": 128,
+  "n_pid_classes": 20
+}

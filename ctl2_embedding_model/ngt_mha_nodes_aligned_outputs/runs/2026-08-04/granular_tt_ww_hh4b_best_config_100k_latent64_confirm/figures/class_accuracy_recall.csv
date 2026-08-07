@@ -1,0 +1,11 @@
+class,per_class_accuracy_recall
+minbias,0.7123333333333334
+qcd,0.5287333333333334
+dy,0.3612666666666667
+tt_hadronic,0.5960666666666666
+tt_leptonic,0.3729333333333333
+tt_semileptonic,0.3614
+ww_hadronic,0.3019333333333333
+ww_leptonic,0.441
+ww_semileptonic,0.2494
+hh4b,0.6363333333333333
