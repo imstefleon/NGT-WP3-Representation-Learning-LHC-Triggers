@@ -28,8 +28,9 @@
     "readme_navigation": "current project and documentation links passed"
   },
   "gitlab": {
-    "target_branch": "cern-final-2026-10-28",
     "merge_target": "master",
-    "remote_validation": "Consult the GitLab branch pipeline; local checks are recorded separately"
+    "remote_validation": "Consult the GitLab branch pipeline; local checks are recorded separately",
+    "primary_branch": "master",
+    "review_branch": "cern-final-2026-10-28"
   }
 }

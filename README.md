@@ -46,7 +46,7 @@ pending. Exact measurements and scope are in [the delivery guide](docs/DELIVERY.
 
 ```bash
 git lfs install
-git clone --branch cern-final-2026-10-28 https://gitlab.cern.ch/cms-l1-ad/openlab_ss26.git
+git clone --branch master https://gitlab.cern.ch/cms-l1-ad/openlab_ss26.git
 cd openlab_ss26
 git lfs pull
 ```
