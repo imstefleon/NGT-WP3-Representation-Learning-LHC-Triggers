@@ -21,11 +21,12 @@
     "ctl2_source_and_environment": "preserved; training/synthesis not executed",
     "mermaid": {
       "mermaid_version": "11.4.1",
-      "diagrams_parsed": 14,
+      "diagrams_parsed": 16,
       "syntax": "passed",
       "scope": "All .mmd sources and fenced Mermaid blocks in Markdown"
     },
-    "readme_navigation": "current project and documentation links passed"
+    "readme_navigation": "current project and documentation links passed",
+    "github_readme": "beginner introduction, relative links, source-diagram agreement and numerical highlights checked"
   },
   "gitlab": {
     "merge_target": "master",

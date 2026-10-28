@@ -1,10 +1,12 @@
 # Mermaid diagrams
 
-Current diagrams are embedded in the corresponding README files so GitLab can
+Current diagrams are embedded in the corresponding README files so GitHub and GitLab can
 render them directly. Editable `.mmd` sources are preserved here.
 
 | Source | Meaning | Rendered in |
 |---|---|---|
+| [event_learning_workflow.mmd](event_learning_workflow.mmd) | Beginner-friendly view of the event, embedding and anomaly evaluation | [Root README](../../README.md) |
+| [event_learning_workflow.mmd](event_learning_workflow.mmd) | Beginner-friendly view of the event, embedding and anomaly evaluation | [Root README](../../README.md) |
 | [repository_overview.mmd](repository_overview.mmd) | The three projects and their relationship | [Root README](../../README.md) |
 | [ngt_100m_architecture.mmd](ngt_100m_architecture.mmd) | Selected four-block, raw-PID, attention-pooling MHA graph | [NGT README](../../ngt_model/README.md) |
 | [quantization_workflow.mmd](quantization_workflow.mmd) | Checkpoint conversion, selective INT8 and paired comparison | [Quantization README](../../quantized_model/README.md) |

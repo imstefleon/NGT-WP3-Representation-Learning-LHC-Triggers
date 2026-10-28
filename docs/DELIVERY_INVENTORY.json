@@ -19,8 +19,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 4186,
-      "sha256": "e7a954c100a70b2102058be0fcf7c988562232adad784519e7935ee52ebaecdc"
+      "bytes": 6538,
+      "sha256": "4ff8c60c331a7b7cc32b3ac98ecaf1ba842ef75740b7560f9e8cd324c7a8cc1f"
     },
     {
       "path": "archive/README.md",
@@ -54,8 +54,8 @@
     },
     {
       "path": "docs/LOCAL_CHECKS.json",
-      "bytes": 1239,
-      "sha256": "891576c248b64cd749ec627686619f32eda113b4274709c433d8531cdc5ee057"
+      "bytes": 1361,
+      "sha256": "d925835c78d7fce6bb4a0165d25f519ce8841930e0d18fe0142ad92221316bd5"
     },
     {
       "path": "docs/README.md",
@@ -329,13 +329,18 @@
     },
     {
       "path": "docs/diagrams/README.md",
-      "bytes": 1171,
-      "sha256": "e67840ba885e4f0639606bc11d0259458099d2c7a323b50481639b341d176185"
+      "bytes": 1518,
+      "sha256": "4ca22e6e0c9ae682983729cc1f2a96af6b8b628d6369ed024126b29da4d7c0e3"
     },
     {
       "path": "docs/diagrams/ctl2_pipeline.mmd",
       "bytes": 536,
       "sha256": "3228310ff994ed6384d0eced7eb9649d17e0b5f3619046d5c589e7a0d61218b9"
+    },
+    {
+      "path": "docs/diagrams/event_learning_workflow.mmd",
+      "bytes": 357,
+      "sha256": "1af32ef5fdff7c9fa415ff4527104bc95c681be3421b2e914b582b2de7495a32"
     },
     {
       "path": "docs/diagrams/ngt_100m_architecture.mmd",
