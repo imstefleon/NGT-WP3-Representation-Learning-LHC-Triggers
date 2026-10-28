@@ -217,7 +217,14 @@ def preprocess_dataset(
 def _load_model(model_path, device):
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
-    obj = torch.load(model_path, map_location=device, weights_only=False)
+    requested_device = torch.device(device)
+    if requested_device.type == "cuda" and not torch.cuda.is_available():
+        print(
+            f"WARNING: requested device={device}, but CUDA is not available. "
+            "Loading model on CPU instead."
+        )
+        requested_device = torch.device("cpu")
+    obj = torch.load(model_path, map_location=requested_device, weights_only=False)
 
     if isinstance(obj, dict) and "state_dict" in obj:
         raise ValueError(
@@ -237,7 +244,7 @@ def _load_model(model_path, device):
             "Expected a torch.nn.Module."
         )
 
-    model.to(device)
+    model.to(requested_device)
     model.eval()
     return model
 

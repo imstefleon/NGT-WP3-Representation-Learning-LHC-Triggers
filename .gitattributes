@@ -1,0 +1,2 @@
+ctl2_embedding_model/ngt_model/final_run/models/*.pt filter=lfs diff=lfs merge=lfs -text
+ctl2_embedding_model/quantized_model/models/*.pt filter=lfs diff=lfs merge=lfs -text

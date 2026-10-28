@@ -1,16 +1,5 @@
 """
 Standard multi-head self-attention encoder for Collide-2V L1 candidate tensors.
-
-This is the architecture ablation of `LinformerAttention`/`LinformerEmbeddingFullPrecision`
-(see `NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb`): the low-rank
-Linformer sequence projection (`proj_k`, `E`/`F`) is replaced by standard (full, non-low-rank)
-multi-head self-attention. Everything else -- residual attention blocks, mean or attention
-pooling, the post-pool FFN, and the {'latent','logits'} output -- is unchanged, so the two
-architectures are directly comparable at matched `latent_dim`/`ff_dim`/`num_heads`.
-
-Shared by `NGT_MHA_NodesAligned_FullPrecision_Collide2V_L1features.ipynb`, `scale_test.py`,
-and `eval_quality_collide2v.py` (via the `LatentOnlyWrapper` export) so the model definition
-lives in exactly one place.
 """
 
 from __future__ import annotations
@@ -60,6 +49,7 @@ class MHAEmbeddingFullPrecision(nn.Module):
         latent_dim: int,
         n_classes: int,
         ff_dim: int = 32,
+        d_model: int | None = None,
         num_heads: int = 2,
         pooling_mode: str = 'mean',
         classifier_head: str = 'mlp',
@@ -67,42 +57,65 @@ class MHAEmbeddingFullPrecision(nn.Module):
     ):
         super().__init__()
         assert pooling_mode in {'mean', 'attention'}
-        assert classifier_head in {'mlp', 'linear'}
+        assert classifier_head in {'mlp', 'mlp2', 'linear'}
         assert num_attention_blocks >= 1
+        model_dim = int(d_model or ff_dim)
+        feedforward_dim = int(ff_dim)
         self.n_constituents = n_constituents
         self.pooling_mode = pooling_mode
         self.classifier_head = classifier_head
         self.num_attention_blocks = num_attention_blocks
-        self.input_proj = nn.Linear(n_features, ff_dim)
+        self.d_model = model_dim
+        self.ff_dim = feedforward_dim
+        self.input_proj = nn.Linear(n_features, model_dim)
         self.attention_blocks = nn.ModuleList(
-            StandardMHA(ff_dim, num_heads=num_heads, seq_len=n_constituents)
+            StandardMHA(model_dim, num_heads=num_heads, seq_len=n_constituents)
             for _ in range(num_attention_blocks)
         )
         if pooling_mode == 'attention':
-            pool_hidden = max(8, ff_dim // 2)
+            pool_hidden = max(8, model_dim // 2)
             self.pool_score = nn.Sequential(
-                nn.Linear(ff_dim, pool_hidden),
+                nn.Linear(model_dim, pool_hidden),
                 nn.ReLU(),
                 nn.Linear(pool_hidden, 1),
             )
         else:
             self.pool_score = None
         self.post_pool = nn.Sequential(
-            nn.Linear(ff_dim, ff_dim),
+            nn.Linear(model_dim, feedforward_dim),
             nn.ReLU(),
-            nn.Linear(ff_dim, ff_dim),
+            nn.Linear(feedforward_dim, model_dim),
             nn.ReLU(),
         )
-        self.latent = nn.Linear(ff_dim, latent_dim)
+        self.latent = nn.Linear(model_dim, latent_dim)
+        classifier_hidden_dim = model_dim if d_model is not None else feedforward_dim
         if classifier_head == 'mlp':
             self.cls_hidden = nn.Sequential(
-                nn.Linear(latent_dim, ff_dim),
+                nn.Linear(latent_dim, classifier_hidden_dim),
                 nn.ReLU(),
             )
-            self.class_logits = nn.Linear(ff_dim, n_classes)
+            self.class_logits = nn.Linear(classifier_hidden_dim, n_classes)
+            self.classifier_probe_architecture = (
+                f"Linear({latent_dim},{classifier_hidden_dim}) -> ReLU -> "
+                f"Linear({classifier_hidden_dim},{n_classes})"
+            )
+        elif classifier_head == 'mlp2':
+            self.cls_hidden = nn.Sequential(
+                nn.Linear(latent_dim, classifier_hidden_dim),
+                nn.GELU(),
+                nn.Linear(classifier_hidden_dim, classifier_hidden_dim),
+                nn.GELU(),
+            )
+            self.class_logits = nn.Linear(classifier_hidden_dim, n_classes)
+            self.classifier_probe_architecture = (
+                f"Linear({latent_dim},{classifier_hidden_dim}) -> GELU -> "
+                f"Linear({classifier_hidden_dim},{classifier_hidden_dim}) -> GELU -> "
+                f"Linear({classifier_hidden_dim},{n_classes})"
+            )
         else:
             self.cls_hidden = nn.Identity()
             self.class_logits = nn.Linear(latent_dim, n_classes)
+            self.classifier_probe_architecture = f"Linear({latent_dim},{n_classes})"
 
     def pool(self, res, valid_mask):
         valid_float = valid_mask.unsqueeze(-1).to(res.dtype)

@@ -1,0 +1,45 @@
+{
+  "kind": "numerical_comparison_only",
+  "training_overlap": "not excluded",
+  "physics_acceptance": false,
+  "class_order": [
+    "minbias",
+    "qcd",
+    "dy",
+    "top"
+  ],
+  "eval_cache_rows": [
+    0,
+    128
+  ],
+  "minbias_reference_cache_rows": [
+    1000,
+    1256
+  ],
+  "sources": {
+    "minbias": {
+      "cache_filename": "external_higgs_anomaly_minbias_2000_l1_only_top_pt_collide2v_updated_rawtensor.npy",
+      "sha256": "73d54108ac383976dd2388063fbd794966f121c2dea33188d0cd10b158fb4317"
+    },
+    "qcd": {
+      "cache_filename": "external_higgs_anomaly_qcd_2000_l1_only_top_pt_collide2v_updated_rawtensor.npy",
+      "sha256": "727c58977113ce08a0c26e02d7d73f94405cc516acbbcaa07e3362a283b7116e"
+    },
+    "dy": {
+      "cache_filename": "external_higgs_anomaly_dy_2000_l1_only_top_pt_collide2v_updated_rawtensor.npy",
+      "sha256": "6eab3de716553520cb9768e7cc775d094c00311913da48c1404bb9c36ef996cc"
+    },
+    "top": {
+      "cache_filename": "external_higgs_anomaly_top_2000_l1_only_top_pt_collide2v_updated_rawtensor.npy",
+      "sha256": "5a06358f61bb403ae60844d4df9a8572ebcc6d0688d15c033d34ee29f8320396"
+    },
+    "hh4b": {
+      "cache_filename": "external_higgs_anomaly_hh4b_2000_l1_only_top_pt_collide2v_updated_rawtensor.npy",
+      "sha256": "35f715014118db38efa056dea315bba7af9aae74aa5ab9a52a1fc19707205b48"
+    },
+    "vbfh": {
+      "cache_filename": "external_higgs_anomaly_vbfh_2000_l1_only_top_pt_collide2v_updated_rawtensor.npy",
+      "sha256": "7745e487ac19cc16873c14ca7502abfbf122cd2dcc917bc15b4a694ea3c8463b"
+    }
+  }
+}

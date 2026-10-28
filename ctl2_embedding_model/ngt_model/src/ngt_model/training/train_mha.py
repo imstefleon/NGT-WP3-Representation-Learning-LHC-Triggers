@@ -25,7 +25,7 @@ import json
 import os
 import random
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -79,18 +79,46 @@ def parse_args():
     parser.add_argument("--collide2v-path", default=None)
     parser.add_argument("--n-constituents", type=int, default=100)
     parser.add_argument("--n-events-per-class", type=int, default=100_000)
+    parser.add_argument("--balanced-val-events-per-class", type=int, default=None,
+                        help="If set, hold out this many validation events per class instead of the default 15%.")
+    parser.add_argument("--balanced-eval-events-per-class", type=int, default=None,
+                        help="If set, hold out this many internal eval events per class instead of the default 15%.")
+    parser.add_argument("--data-loading-mode", default="materialized",
+                        choices=["materialized", "rank_sharded_materialized"],
+                        help=("materialized loads the requested class tensors on every process. "
+                              "rank_sharded_materialized loads one deterministic event shard per DDP rank."))
+    parser.add_argument("--ddp-timeout-minutes", type=int, default=int(os.environ.get("DDP_TIMEOUT_MINUTES", "30")),
+                        help="Distributed process-group timeout. Increase for large rank-sharded cache builds.")
     parser.add_argument("--epochs", type=int, default=50)
     parser.add_argument("--early-stopping-patience", type=int, default=10)
     parser.add_argument("--batch-size", type=int, default=256)
     parser.add_argument("--num-workers", type=int, default=0)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--weight-decay", type=float, default=1e-4)
+    parser.add_argument("--lr-schedule", default="none", choices=["none", "cosine"],
+                        help="Learning-rate schedule stepped once per epoch.")
+    parser.add_argument("--lr-eta-min", type=float, default=0.0,
+                        help="Minimum LR for --lr-schedule=cosine.")
+    parser.add_argument("--grad-clip-norm", type=float, default=0.0,
+                        help="If >0, clip global gradient norm before optimizer.step().")
+    parser.add_argument("--fail-on-nonfinite-loss", action="store_true",
+                        help="Raise immediately if the training loss becomes NaN or Inf.")
+    parser.add_argument("--max-loss-value", type=float, default=0.0,
+                        help="If >0, abort when abs(loss) exceeds this value.")
+    parser.add_argument("--max-regularizer-value", type=float, default=0.0,
+                        help="If >0, abort when any latent regularizer exceeds this value.")
+    parser.add_argument("--log-every-steps", type=int, default=0,
+                        help="If >0, print within-epoch progress every N batches on rank 0.")
     parser.add_argument("--latent-dim", type=int, default=128)
+    parser.add_argument("--d-model", type=int, default=None,
+                        help=("Optional attention/model dimension. If set, --ff-dim is used as "
+                              "the post-pool feed-forward width; if unset, old behavior uses "
+                              "--ff-dim as the model dimension."))
     parser.add_argument("--ff-dim", type=int, default=128)
     parser.add_argument("--num-heads", type=int, default=8)
     parser.add_argument("--num-attention-blocks", type=int, default=2)
     parser.add_argument("--pooling-mode", default="attention", choices=["mean", "attention"])
-    parser.add_argument("--classifier-head", default="mlp", choices=["mlp", "linear"])
+    parser.add_argument("--classifier-head", default="mlp", choices=["mlp", "mlp2", "linear"])
     parser.add_argument("--loss-mode", default="ce", choices=["ce", "label_smoothing", "focal"],
                         help="Classification loss: standard CE, label-smoothed CE, or focal loss.")
     parser.add_argument("--label-smoothing", type=float, default=0.0,
@@ -120,11 +148,19 @@ def parse_args():
     parser.add_argument("--vicreg-drop-prob", type=float, default=0.05,
                         help="Per-candidate dropout probability for VICReg views.")
     parser.add_argument("--augmentation-copies", type=int, default=1)
+    parser.add_argument("--pid-encoding", default="onehot", choices=["onehot", "raw"],
+                        help="onehot matches historical preprocessing; raw keeps the 5 input features.")
     parser.add_argument("--class-weight-mode", default="none", choices=["none", "balanced"])
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--device", default=None, help="cuda/cpu. In torchrun, local CUDA rank is used.")
     parser.add_argument("--output-root", default="ngt_mha_nodes_aligned_outputs")
     parser.add_argument("--run-name", default=None)
+    parser.add_argument("--checkpoint-every-epochs", type=int, default=0,
+                        help="If >0, save a numbered model checkpoint every N epochs.")
+    parser.add_argument("--resume-checkpoint", default=None,
+                        help="Optional checkpoint_epoch_XXX.pt path containing model_state_dict.")
+    parser.add_argument("--start-epoch", type=int, default=None,
+                        help="First epoch number to run when resuming. Defaults to checkpoint epoch + 1.")
     parser.add_argument("--eval-quality-events", type=int, default=0,
                         help="If >0, run eval_quality_collide2v on the saved latent-only checkpoint.")
     parser.add_argument("--mlflow-enable", action="store_true",
@@ -155,7 +191,10 @@ def setup_distributed(args):
         return False, 0, 1, 0, device
 
     local_rank = int(os.environ.get("LOCAL_RANK", "0"))
-    dist.init_process_group(backend="nccl" if torch.cuda.is_available() else "gloo")
+    dist.init_process_group(
+        backend="nccl" if torch.cuda.is_available() else "gloo",
+        timeout=timedelta(minutes=args.ddp_timeout_minutes),
+    )
     if torch.cuda.is_available():
         torch.cuda.set_device(local_rank)
         device = torch.device(f"cuda:{local_rank}")
@@ -179,6 +218,38 @@ def set_seed(seed: int):
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
+
+
+def distributed_normalization_constants(data: np.ndarray, device: torch.device, distributed: bool) -> dict:
+    norm = compute_normalization_constants(data)
+    if not distributed:
+        return norm
+
+    mins = torch.tensor([norm["pt_min"], norm["eta_min"], norm["dxy_min"]], dtype=torch.float64, device=device)
+    maxs = torch.tensor([norm["pt_max"], norm["eta_max"], norm["dxy_max"]], dtype=torch.float64, device=device)
+    dist.all_reduce(mins, op=dist.ReduceOp.MIN)
+    dist.all_reduce(maxs, op=dist.ReduceOp.MAX)
+    return {
+        "pt_min": float(mins[0].item()),
+        "pt_max": float(maxs[0].item()),
+        "eta_min": float(mins[1].item()),
+        "eta_max": float(maxs[1].item()),
+        "phi_min": -float(np.pi),
+        "phi_max": float(np.pi),
+        "dxy_min": float(mins[2].item()),
+        "dxy_max": float(maxs[2].item()),
+    }
+
+
+def distributed_pid_mapping(data: np.ndarray, distributed: bool) -> dict:
+    local_mapping = build_pid_mapping(data)
+    if not distributed:
+        return local_mapping
+
+    gathered = [None for _ in range(dist.get_world_size())]
+    dist.all_gather_object(gathered, sorted(local_mapping.keys()))
+    pids = sorted({int(pid) for chunk in gathered for pid in (chunk or [])})
+    return {pid: idx for idx, pid in enumerate(pids)}
 
 
 def make_run_dir(args) -> Path:
@@ -217,6 +288,25 @@ def metric_reduce(loss_sum, correct, total, device, distributed):
     loss = float(vals[0].item() / max(vals[2].item(), 1.0))
     acc = float(vals[1].item() / max(vals[2].item(), 1.0))
     return loss, acc
+
+
+def count_model_parameters(model: torch.nn.Module) -> dict[str, int]:
+    classifier_prefixes = ("cls_hidden.", "class_logits.")
+    classifier_params = 0
+    encoder_params = 0
+    for name, param in model.named_parameters():
+        if not param.requires_grad:
+            continue
+        n_values = int(param.numel())
+        if name.startswith(classifier_prefixes):
+            classifier_params += n_values
+        else:
+            encoder_params += n_values
+    return {
+        "n_params": encoder_params + classifier_params,
+        "n_encoder_params": encoder_params,
+        "n_classifier_params": classifier_params,
+    }
 
 
 def latent_variance_regularization(latent: torch.Tensor, target_std: float) -> torch.Tensor:
@@ -355,6 +445,13 @@ def run_epoch(
     vicreg_cov_weight: float = 1.0,
     vicreg_noise_std: float = 0.01,
     vicreg_drop_prob: float = 0.05,
+    grad_clip_norm: float = 0.0,
+    fail_on_nonfinite_loss: bool = False,
+    max_loss_value: float = 0.0,
+    max_regularizer_value: float = 0.0,
+    log_every_steps: int = 0,
+    log_prefix: str = "",
+    rank: int = 0,
 ):
     is_train = optimizer is not None
     model.train(is_train)
@@ -370,7 +467,8 @@ def run_epoch(
     correct = 0.0
     total = 0.0
 
-    for xb, yb in loader:
+    epoch_start = time.time()
+    for step_idx, (xb, yb) in enumerate(loader, start=1):
         xb = xb.to(device, non_blocking=True)
         yb = yb.to(device, non_blocking=True)
         with torch.set_grad_enabled(is_train):
@@ -385,7 +483,10 @@ def run_epoch(
             )
             var_reg = latent_variance_regularization(out["latent"], latent_var_target)
             cov_reg = latent_covariance_regularization(out["latent"])
-            supcon = supervised_contrastive_loss(out["latent"], yb, supcon_temperature)
+            if supcon_weight > 0:
+                supcon = supervised_contrastive_loss(out["latent"], yb, supcon_temperature)
+            else:
+                supcon = out["latent"].new_tensor(0.0)
             if is_train and vicreg_weight > 0:
                 view1 = make_vicreg_view(xb, vicreg_noise_std, vicreg_drop_prob)
                 view2 = make_vicreg_view(xb, vicreg_noise_std, vicreg_drop_prob)
@@ -411,9 +512,49 @@ def run_epoch(
                 + (supcon_weight * supcon if supcon_weight > 0 else 0.0)
                 + (vicreg_weight * vicreg if vicreg_weight > 0 else 0.0)
             )
+            if fail_on_nonfinite_loss:
+                components = {
+                    "loss": loss,
+                    "ce_loss": ce_loss,
+                    "latent_var_reg": var_reg,
+                    "latent_cov_reg": cov_reg,
+                    "supcon": supcon,
+                    "vicreg": vicreg,
+                }
+                for name, value in components.items():
+                    if not torch.isfinite(value):
+                        raise FloatingPointError(f"non-finite {name} detected: {float(value.detach().cpu())}")
+                if cov_reg.detach().item() < -1e-8 or var_reg.detach().item() < -1e-8:
+                    raise FloatingPointError(
+                        f"negative regularizer detected: var={float(var_reg.detach().cpu())}, "
+                        f"cov={float(cov_reg.detach().cpu())}"
+                    )
+            if max_loss_value > 0 and torch.abs(loss.detach()) > max_loss_value:
+                raise FloatingPointError(
+                    f"loss magnitude exceeded --max-loss-value={max_loss_value}: "
+                    f"{float(loss.detach().cpu())}"
+                )
+            if max_regularizer_value > 0:
+                monitored_regularizers = []
+                if latent_var_reg_weight > 0:
+                    monitored_regularizers.append(("latent_var_reg", var_reg))
+                if latent_cov_reg_weight > 0:
+                    monitored_regularizers.append(("latent_cov_reg", cov_reg))
+                if supcon_weight > 0:
+                    monitored_regularizers.append(("supcon", supcon))
+                if vicreg_weight > 0:
+                    monitored_regularizers.append(("vicreg", vicreg))
+                for name, value in monitored_regularizers:
+                    if torch.abs(value.detach()) > max_regularizer_value:
+                        raise FloatingPointError(
+                            f"{name} exceeded --max-regularizer-value={max_regularizer_value}: "
+                            f"{float(value.detach().cpu())}"
+                        )
             if is_train:
                 optimizer.zero_grad(set_to_none=True)
                 loss.backward()
+                if grad_clip_norm and grad_clip_norm > 0:
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=grad_clip_norm)
                 optimizer.step()
 
         bs = len(xb)
@@ -428,6 +569,13 @@ def run_epoch(
         vicreg_cov_sum += float(vicreg_cov.item()) * bs
         correct += float((out["logits"].argmax(dim=1) == yb).sum().item())
         total += float(bs)
+        if log_every_steps > 0 and rank == 0 and step_idx % log_every_steps == 0:
+            elapsed = time.time() - epoch_start
+            log(
+                f"{log_prefix} step={step_idx:,}/{len(loader):,} "
+                f"seen={int(total):,} loss={float(loss.item()):.4f} "
+                f"elapsed={elapsed/3600:.2f}h"
+            )
 
     loss, acc = metric_reduce(loss_sum, correct, total, device, distributed)
     ce_loss, _ = metric_reduce(ce_loss_sum, correct, total, device, distributed)
@@ -457,6 +605,24 @@ def extract_outputs(model, X: np.ndarray, y: np.ndarray, device: torch.device, b
 def save_json(path: Path, payload: dict):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2, default=str)
+
+
+def save_epoch_checkpoint(
+    project: Path,
+    model: torch.nn.Module,
+    epoch: int,
+    row: dict,
+    best_val_loss: float,
+):
+    checkpoint = {
+        "epoch": int(epoch),
+        "model_state_dict": {k: v.detach().cpu() for k, v in model.state_dict().items()},
+        "metrics": row,
+        "best_val_loss": float(best_val_loss),
+    }
+    path = project / "models" / f"checkpoint_epoch_{epoch:03d}.pt"
+    torch.save(checkpoint, path)
+    torch.save(LatentOnlyWrapper(model), project / "models" / f"mha_nodes_aligned_epoch_{epoch:03d}_for_eval.pt")
 
 
 def make_confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray, n_classes: int) -> np.ndarray:
@@ -637,18 +803,40 @@ def main():
         label_map = cfg.label_map
 
         loader = Collide2VLoader(cfg)
-        events_per_class = {cls: args.n_events_per_class for cls in class_names}
-        raw_tensor, y, sample_name, _ = loader.load_classes(events_per_class, cache_prefix="train_mha")
+        rank_sharded_data = distributed and args.data_loading_mode == "rank_sharded_materialized"
+        if rank_sharded_data and args.n_events_per_class % world_size != 0:
+            raise ValueError(
+                "--data-loading-mode rank_sharded_materialized requires --n-events-per-class "
+                "to be divisible by WORLD_SIZE so every DDP rank has the same number of batches."
+            )
+        events_per_class = {
+            cls: (args.n_events_per_class // world_size if rank_sharded_data else args.n_events_per_class)
+            for cls in class_names
+        }
+        raw_tensor, y, sample_name, _ = loader.load_classes(
+            events_per_class,
+            cache_prefix="train_mha",
+            event_stride=world_size if rank_sharded_data else 1,
+            event_offset=rank if rank_sharded_data else 0,
+        )
+        del _
 
         train_idx, val_idx, eval_idx = build_split_indices(
             y,
             class_names=class_names,
             label_map=label_map,
             seed=args.seed,
+            balanced_val_events_per_class=args.balanced_val_events_per_class,
+            balanced_eval_events_per_class=args.balanced_eval_events_per_class,
         )
-        norm = compute_normalization_constants(raw_tensor[train_idx])
-        pid_mapping = build_pid_mapping(raw_tensor[train_idx])
-        X_all, pid_mapping = preprocess_dataset(raw_tensor, norm=norm, pid_mapping=pid_mapping, add_pid_ohe=True)
+        norm = distributed_normalization_constants(raw_tensor[train_idx], device, distributed)
+        pid_mapping = distributed_pid_mapping(raw_tensor[train_idx], distributed)
+        X_all, pid_mapping = preprocess_dataset(
+            raw_tensor,
+            norm=norm,
+            pid_mapping=pid_mapping,
+            add_pid_ohe=args.pid_encoding == "onehot",
+        )
 
         X_train, y_train = X_all[train_idx], y[train_idx]
         X_val, y_val = X_all[val_idx], y[val_idx]
@@ -658,7 +846,12 @@ def main():
             aug_blocks = [X_train]
             for _ in range(args.augmentation_copies):
                 raw_aug = augment_rotate_phi(raw_tensor[train_idx])
-                X_rot, _ = preprocess_dataset(raw_aug, norm=norm, pid_mapping=pid_mapping, add_pid_ohe=True)
+                X_rot, _ = preprocess_dataset(
+                    raw_aug,
+                    norm=norm,
+                    pid_mapping=pid_mapping,
+                    add_pid_ohe=args.pid_encoding == "onehot",
+                )
                 aug_blocks.append(X_rot)
             X_aug = np.concatenate(aug_blocks, axis=0)
             y_aug = np.tile(y_train, args.augmentation_copies + 1)
@@ -676,6 +869,11 @@ def main():
                 "n_train_aug": int(len(X_aug)),
                 "n_val": int(len(X_val)),
                 "n_eval": int(len(X_eval)),
+                "loaded_events_per_class": {cls: int(events_per_class[cls]) for cls in class_names},
+                "global_events_per_class": {cls: int(args.n_events_per_class) for cls in class_names},
+                "data_rank_sharded": bool(rank_sharded_data),
+                "data_event_stride": int(world_size if rank_sharded_data else 1),
+                "data_event_offset": int(rank if rank_sharded_data else 0),
                 "pid_mapping": {int(k): int(v) for k, v in pid_mapping.items()},
                 "norm": norm,
                 "distributed": distributed,
@@ -691,17 +889,32 @@ def main():
             latent_dim=args.latent_dim,
             n_classes=len(class_names),
             ff_dim=args.ff_dim,
+            d_model=args.d_model,
             num_heads=args.num_heads,
             pooling_mode=args.pooling_mode,
             classifier_head=args.classifier_head,
             num_attention_blocks=args.num_attention_blocks,
         ).to(device)
-        n_params = int(sum(p.numel() for p in model.parameters()))
+        resume_epoch = 1
+        if args.resume_checkpoint:
+            checkpoint_path = Path(args.resume_checkpoint)
+            checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
+            state_dict = checkpoint.get("model_state_dict", checkpoint)
+            model.load_state_dict(state_dict)
+            checkpoint_epoch = int(checkpoint.get("epoch", 0)) if isinstance(checkpoint, dict) else 0
+            resume_epoch = int(args.start_epoch or checkpoint_epoch + 1)
+            if is_main(rank):
+                print(f"Resumed model checkpoint {checkpoint_path} -> start_epoch={resume_epoch}", flush=True)
+        param_counts = count_model_parameters(model)
+        classifier_probe_architecture = getattr(model, "classifier_probe_architecture", args.classifier_head)
         if is_main(rank):
-            config["n_params"] = n_params
+            config.update(param_counts)
+            config["classifier_probe_architecture"] = classifier_probe_architecture
             save_json(project / "run_config.json", config)
             if mlflow_client is not None:
-                mlflow_client.log_param("n_params", n_params)
+                for key, value in param_counts.items():
+                    mlflow_client.log_param(key, value)
+                mlflow_client.log_param("classifier_probe_architecture", classifier_probe_architecture)
 
         if distributed:
             ddp_kwargs = {"device_ids": [local_rank], "output_device": local_rank} if device.type == "cuda" else {}
@@ -711,11 +924,24 @@ def main():
 
         class_weights = make_class_weights(y_aug, args.class_weight_mode, device, len(class_names))
         optimizer = torch.optim.AdamW(model_for_train.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+        scheduler = None
+        if args.lr_schedule == "cosine":
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                optimizer,
+                T_max=args.epochs,
+                eta_min=args.lr_eta_min,
+            )
 
         train_dataset = TensorDatasetTorch(X_aug, y_aug)
         val_dataset = TensorDatasetTorch(X_val, y_val)
-        train_sampler = DistributedSampler(train_dataset, num_replicas=world_size, rank=rank, shuffle=True) if distributed else None
-        val_sampler = DistributedSampler(val_dataset, num_replicas=world_size, rank=rank, shuffle=False) if distributed else None
+        train_sampler = (
+            DistributedSampler(train_dataset, num_replicas=world_size, rank=rank, shuffle=True)
+            if distributed and not rank_sharded_data else None
+        )
+        val_sampler = (
+            DistributedSampler(val_dataset, num_replicas=world_size, rank=rank, shuffle=False)
+            if distributed and not rank_sharded_data else None
+        )
         train_loader = DataLoader(
             train_dataset,
             batch_size=args.batch_size,
@@ -738,7 +964,7 @@ def main():
         best_state = None
         patience_left = args.early_stopping_patience
 
-        for epoch in range(1, args.epochs + 1):
+        for epoch in range(resume_epoch, args.epochs + 1):
             if train_sampler is not None:
                 train_sampler.set_epoch(epoch)
             t0 = time.time()
@@ -770,6 +996,13 @@ def main():
                 vicreg_cov_weight=args.vicreg_cov_weight,
                 vicreg_noise_std=args.vicreg_noise_std,
                 vicreg_drop_prob=args.vicreg_drop_prob,
+                grad_clip_norm=args.grad_clip_norm,
+                fail_on_nonfinite_loss=args.fail_on_nonfinite_loss,
+                max_loss_value=args.max_loss_value,
+                max_regularizer_value=args.max_regularizer_value,
+                log_every_steps=args.log_every_steps,
+                log_prefix=f"epoch {epoch:03d}/{args.epochs} train",
+                rank=rank,
             )
             (
                 val_loss,
@@ -799,6 +1032,13 @@ def main():
                 vicreg_cov_weight=args.vicreg_cov_weight,
                 vicreg_noise_std=args.vicreg_noise_std,
                 vicreg_drop_prob=args.vicreg_drop_prob,
+                grad_clip_norm=args.grad_clip_norm,
+                fail_on_nonfinite_loss=args.fail_on_nonfinite_loss,
+                max_loss_value=args.max_loss_value,
+                max_regularizer_value=args.max_regularizer_value,
+                log_every_steps=args.log_every_steps,
+                log_prefix=f"epoch {epoch:03d}/{args.epochs} val",
+                rank=rank,
             )
             elapsed = time.time() - t0
             row = {
@@ -824,6 +1064,7 @@ def main():
                 "val_vicreg_var_loss": val_vicreg_var,
                 "val_vicreg_cov_loss": val_vicreg_cov,
                 "elapsed_s": elapsed,
+                "lr": float(optimizer.param_groups[0]["lr"]),
             }
             history.append(row)
             if is_main(rank):
@@ -861,11 +1102,16 @@ def main():
                             "val_vicreg_var_loss": val_vicreg_var,
                             "val_vicreg_cov_loss": val_vicreg_cov,
                             "epoch_elapsed_s": elapsed,
+                            "lr": float(optimizer.param_groups[0]["lr"]),
                         },
                         step=epoch,
                     )
 
+            if scheduler is not None:
+                scheduler.step()
+
             improved = val_loss < best_val_loss
+            stop_training = False
             if improved:
                 best_val_loss = val_loss
                 patience_left = args.early_stopping_patience
@@ -875,7 +1121,15 @@ def main():
                 if args.early_stopping_patience > 0 and patience_left <= 0:
                     if is_main(rank):
                         print(f"Early stopping at epoch {epoch}; best_val_loss={best_val_loss:.4f}")
-                    break
+                    stop_training = True
+
+            if is_main(rank):
+                pd.DataFrame(history).to_csv(project / "training_history.csv", index=False)
+                if args.checkpoint_every_epochs > 0 and epoch % args.checkpoint_every_epochs == 0:
+                    save_epoch_checkpoint(project, model, epoch, row, best_val_loss)
+
+            if stop_training:
+                break
 
         if best_state is not None:
             model.load_state_dict(best_state)

@@ -115,7 +115,7 @@ def parse_args():
     parser.add_argument("--num-heads", type=int, default=8)
     parser.add_argument("--num-attention-blocks", type=int, default=2)
     parser.add_argument("--pooling-mode", default="attention", choices=["mean", "attention"])
-    parser.add_argument("--classifier-head", default="mlp", choices=["mlp", "linear"])
+    parser.add_argument("--classifier-head", default="mlp", choices=["mlp", "mlp2", "linear"])
     parser.add_argument("--augmentation-copies", type=int, default=1)
     parser.add_argument("--class-weight-mode", default="none", choices=["none", "balanced"])
     parser.add_argument("--seed", type=int, default=42)

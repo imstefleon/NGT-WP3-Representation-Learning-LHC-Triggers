@@ -178,6 +178,11 @@ def _plot_matrix(
 
 
 def _plot_hh4b_tag_rate(summary: pd.DataFrame, out_path: Path, model_label: str) -> None:
+    if "hh4b_tag_rate" not in summary.columns:
+        return
+    if summary["hh4b_tag_rate"].isna().all():
+        print("Skipping HH4B tag-rate plot because hh4b is not a trained classifier output.")
+        return
     fig, ax = plt.subplots(figsize=(7, 4))
     labels = summary["true_external_class"].tolist()
     values = summary["hh4b_tag_rate"].to_numpy(dtype=float)

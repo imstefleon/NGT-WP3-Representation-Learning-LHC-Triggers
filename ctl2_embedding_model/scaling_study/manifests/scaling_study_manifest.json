@@ -1,0 +1,246 @@
+[
+  {
+    "class_configuration": "4class",
+    "class_names": [
+      "minbias",
+      "qcd",
+      "dy",
+      "top"
+    ],
+    "samples_per_class": 50000,
+    "model_size": "small",
+    "classifier_head": "mlp2",
+    "latent_dim": 64,
+    "ff_dim": 128,
+    "num_heads": 8,
+    "num_attention_blocks": 2,
+    "output_root": "outputs/scaling_study/4class/50k/small",
+    "run_name": "scaling_4class_50k_small_mlp2_seed42",
+    "train_command": "\"${PY:-python}\" -m ngt_model.training.train_mha --data-source collide2v_updated --class-names minbias,qcd,dy,top --n-events-per-class 50000 --epochs 50 --early-stopping-patience 10 --batch-size 256 --num-workers 0 --latent-dim 64 --ff-dim 128 --num-heads 8 --num-attention-blocks 2 --pooling-mode mean --classifier-head mlp2 --loss-mode ce --latent-var-reg-weight 0.01 --latent-cov-reg-weight 0.001 --augmentation-copies 1 --class-weight-mode none --seed 42 --output-root outputs/scaling_study/4class/50k/small --run-name scaling_4class_50k_small_mlp2_seed42 --eval-quality-events 2000 --mlflow-enable --mlflow-tracking-uri https://ml.cern.ch/models --mlflow-experiment ngt_model_scaling_study --mlflow-run-name scaling_4class_50k_small_mlp2_seed42",
+    "run_dir_bash": "outputs/scaling_study/4class/50k/small/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_50k_small_mlp2_seed42",
+    "diagnostics_commands": [
+      "\"${PY:-python}\" -m ngt_model.evaluation.latent_diagnostics \"outputs/scaling_study/4class/50k/small/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_50k_small_mlp2_seed42\"",
+      "\"${PY:-python}\" -m ngt_model.evaluation.latent_fisher \"outputs/scaling_study/4class/50k/small/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_50k_small_mlp2_seed42\" --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.head_fisher \"outputs/scaling_study/4class/50k/small/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_50k_small_mlp2_seed42\" --scope classifier_head --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.external_classifier_response \"outputs/scaling_study/4class/50k/small/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_50k_small_mlp2_seed42\" --external-classes hh4b,hh,vbfh,ggh --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.external_higgs_anomaly --run-dir \"outputs/scaling_study/4class/50k/small/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_50k_small_mlp2_seed42\" --signals hh4b,hh,vbfh,ggh --n-background-per-class 2000 --n-signal-per-class 2000 --device cpu --batch-size 256 --tsne-max-events-per-class 600 --tsne-perplexity 40.0 --tsne-n-iter 1000 --raise-errors"
+    ]
+  },
+  {
+    "class_configuration": "4class",
+    "class_names": [
+      "minbias",
+      "qcd",
+      "dy",
+      "top"
+    ],
+    "samples_per_class": 100000,
+    "model_size": "medium",
+    "classifier_head": "mlp2",
+    "latent_dim": 128,
+    "ff_dim": 256,
+    "num_heads": 8,
+    "num_attention_blocks": 2,
+    "output_root": "outputs/scaling_study/4class/100k/medium",
+    "run_name": "scaling_4class_100k_medium_mlp2_seed42",
+    "train_command": "\"${PY:-python}\" -m ngt_model.training.train_mha --data-source collide2v_updated --class-names minbias,qcd,dy,top --n-events-per-class 100000 --epochs 50 --early-stopping-patience 10 --batch-size 256 --num-workers 0 --latent-dim 128 --ff-dim 256 --num-heads 8 --num-attention-blocks 2 --pooling-mode mean --classifier-head mlp2 --loss-mode ce --latent-var-reg-weight 0.01 --latent-cov-reg-weight 0.001 --augmentation-copies 1 --class-weight-mode none --seed 42 --output-root outputs/scaling_study/4class/100k/medium --run-name scaling_4class_100k_medium_mlp2_seed42 --eval-quality-events 2000 --mlflow-enable --mlflow-tracking-uri https://ml.cern.ch/models --mlflow-experiment ngt_model_scaling_study --mlflow-run-name scaling_4class_100k_medium_mlp2_seed42",
+    "run_dir_bash": "outputs/scaling_study/4class/100k/medium/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_100k_medium_mlp2_seed42",
+    "diagnostics_commands": [
+      "\"${PY:-python}\" -m ngt_model.evaluation.latent_diagnostics \"outputs/scaling_study/4class/100k/medium/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_100k_medium_mlp2_seed42\"",
+      "\"${PY:-python}\" -m ngt_model.evaluation.latent_fisher \"outputs/scaling_study/4class/100k/medium/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_100k_medium_mlp2_seed42\" --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.head_fisher \"outputs/scaling_study/4class/100k/medium/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_100k_medium_mlp2_seed42\" --scope classifier_head --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.external_classifier_response \"outputs/scaling_study/4class/100k/medium/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_100k_medium_mlp2_seed42\" --external-classes hh4b,hh,vbfh,ggh --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.external_higgs_anomaly --run-dir \"outputs/scaling_study/4class/100k/medium/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_100k_medium_mlp2_seed42\" --signals hh4b,hh,vbfh,ggh --n-background-per-class 2000 --n-signal-per-class 2000 --device cpu --batch-size 256 --tsne-max-events-per-class 600 --tsne-perplexity 40.0 --tsne-n-iter 1000 --raise-errors"
+    ]
+  },
+  {
+    "class_configuration": "4class",
+    "class_names": [
+      "minbias",
+      "qcd",
+      "dy",
+      "top"
+    ],
+    "samples_per_class": 150000,
+    "model_size": "large",
+    "classifier_head": "mlp2",
+    "latent_dim": 128,
+    "ff_dim": 256,
+    "num_heads": 8,
+    "num_attention_blocks": 4,
+    "output_root": "outputs/scaling_study/4class/150k/large",
+    "run_name": "scaling_4class_150k_large_mlp2_seed42",
+    "train_command": "\"${PY:-python}\" -m ngt_model.training.train_mha --data-source collide2v_updated --class-names minbias,qcd,dy,top --n-events-per-class 150000 --epochs 50 --early-stopping-patience 10 --batch-size 256 --num-workers 0 --latent-dim 128 --ff-dim 256 --num-heads 8 --num-attention-blocks 4 --pooling-mode mean --classifier-head mlp2 --loss-mode ce --latent-var-reg-weight 0.01 --latent-cov-reg-weight 0.001 --augmentation-copies 1 --class-weight-mode none --seed 42 --output-root outputs/scaling_study/4class/150k/large --run-name scaling_4class_150k_large_mlp2_seed42 --eval-quality-events 2000 --mlflow-enable --mlflow-tracking-uri https://ml.cern.ch/models --mlflow-experiment ngt_model_scaling_study --mlflow-run-name scaling_4class_150k_large_mlp2_seed42",
+    "run_dir_bash": "outputs/scaling_study/4class/150k/large/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_150k_large_mlp2_seed42",
+    "diagnostics_commands": [
+      "\"${PY:-python}\" -m ngt_model.evaluation.latent_diagnostics \"outputs/scaling_study/4class/150k/large/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_150k_large_mlp2_seed42\"",
+      "\"${PY:-python}\" -m ngt_model.evaluation.latent_fisher \"outputs/scaling_study/4class/150k/large/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_150k_large_mlp2_seed42\" --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.head_fisher \"outputs/scaling_study/4class/150k/large/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_150k_large_mlp2_seed42\" --scope classifier_head --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.external_classifier_response \"outputs/scaling_study/4class/150k/large/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_150k_large_mlp2_seed42\" --external-classes hh4b,hh,vbfh,ggh --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.external_higgs_anomaly --run-dir \"outputs/scaling_study/4class/150k/large/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_150k_large_mlp2_seed42\" --signals hh4b,hh,vbfh,ggh --n-background-per-class 2000 --n-signal-per-class 2000 --device cpu --batch-size 256 --tsne-max-events-per-class 600 --tsne-perplexity 40.0 --tsne-n-iter 1000 --raise-errors"
+    ]
+  },
+  {
+    "class_configuration": "4class",
+    "class_names": [
+      "minbias",
+      "qcd",
+      "dy",
+      "top"
+    ],
+    "samples_per_class": 200000,
+    "model_size": "xl",
+    "classifier_head": "mlp2",
+    "latent_dim": 256,
+    "ff_dim": 512,
+    "num_heads": 8,
+    "num_attention_blocks": 4,
+    "output_root": "outputs/scaling_study/4class/200k/xl",
+    "run_name": "scaling_4class_200k_xl_mlp2_seed42",
+    "train_command": "\"${PY:-python}\" -m ngt_model.training.train_mha --data-source collide2v_updated --class-names minbias,qcd,dy,top --n-events-per-class 200000 --epochs 50 --early-stopping-patience 10 --batch-size 256 --num-workers 0 --latent-dim 256 --ff-dim 512 --num-heads 8 --num-attention-blocks 4 --pooling-mode mean --classifier-head mlp2 --loss-mode ce --latent-var-reg-weight 0.01 --latent-cov-reg-weight 0.001 --augmentation-copies 1 --class-weight-mode none --seed 42 --output-root outputs/scaling_study/4class/200k/xl --run-name scaling_4class_200k_xl_mlp2_seed42 --eval-quality-events 2000 --mlflow-enable --mlflow-tracking-uri https://ml.cern.ch/models --mlflow-experiment ngt_model_scaling_study --mlflow-run-name scaling_4class_200k_xl_mlp2_seed42",
+    "run_dir_bash": "outputs/scaling_study/4class/200k/xl/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_200k_xl_mlp2_seed42",
+    "diagnostics_commands": [
+      "\"${PY:-python}\" -m ngt_model.evaluation.latent_diagnostics \"outputs/scaling_study/4class/200k/xl/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_200k_xl_mlp2_seed42\"",
+      "\"${PY:-python}\" -m ngt_model.evaluation.latent_fisher \"outputs/scaling_study/4class/200k/xl/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_200k_xl_mlp2_seed42\" --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.head_fisher \"outputs/scaling_study/4class/200k/xl/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_200k_xl_mlp2_seed42\" --scope classifier_head --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.external_classifier_response \"outputs/scaling_study/4class/200k/xl/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_200k_xl_mlp2_seed42\" --external-classes hh4b,hh,vbfh,ggh --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.external_higgs_anomaly --run-dir \"outputs/scaling_study/4class/200k/xl/runs/${RUN_DATE:-$(date +%F)}/scaling_4class_200k_xl_mlp2_seed42\" --signals hh4b,hh,vbfh,ggh --n-background-per-class 2000 --n-signal-per-class 2000 --device cpu --batch-size 256 --tsne-max-events-per-class 600 --tsne-perplexity 40.0 --tsne-n-iter 1000 --raise-errors"
+    ]
+  },
+  {
+    "class_configuration": "10plus_sm",
+    "class_names": [
+      "minbias",
+      "qcd",
+      "dy",
+      "tt_hadronic",
+      "tt_leptonic",
+      "tt_semileptonic",
+      "wjets",
+      "ww",
+      "wz",
+      "ttw",
+      "ttz"
+    ],
+    "samples_per_class": 50000,
+    "model_size": "small",
+    "classifier_head": "mlp2",
+    "latent_dim": 64,
+    "ff_dim": 128,
+    "num_heads": 8,
+    "num_attention_blocks": 2,
+    "output_root": "outputs/scaling_study/10plus_sm/50k/small",
+    "run_name": "scaling_10plus_sm_50k_small_mlp2_seed42",
+    "train_command": "\"${PY:-python}\" -m ngt_model.training.train_mha --data-source collide2v_updated --class-names minbias,qcd,dy,tt_hadronic,tt_leptonic,tt_semileptonic,wjets,ww,wz,ttw,ttz --n-events-per-class 50000 --epochs 50 --early-stopping-patience 10 --batch-size 256 --num-workers 0 --latent-dim 64 --ff-dim 128 --num-heads 8 --num-attention-blocks 2 --pooling-mode mean --classifier-head mlp2 --loss-mode ce --latent-var-reg-weight 0.01 --latent-cov-reg-weight 0.001 --augmentation-copies 1 --class-weight-mode none --seed 42 --output-root outputs/scaling_study/10plus_sm/50k/small --run-name scaling_10plus_sm_50k_small_mlp2_seed42 --eval-quality-events 2000 --mlflow-enable --mlflow-tracking-uri https://ml.cern.ch/models --mlflow-experiment ngt_model_scaling_study --mlflow-run-name scaling_10plus_sm_50k_small_mlp2_seed42",
+    "run_dir_bash": "outputs/scaling_study/10plus_sm/50k/small/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_50k_small_mlp2_seed42",
+    "diagnostics_commands": [
+      "\"${PY:-python}\" -m ngt_model.evaluation.latent_diagnostics \"outputs/scaling_study/10plus_sm/50k/small/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_50k_small_mlp2_seed42\"",
+      "\"${PY:-python}\" -m ngt_model.evaluation.latent_fisher \"outputs/scaling_study/10plus_sm/50k/small/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_50k_small_mlp2_seed42\" --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.head_fisher \"outputs/scaling_study/10plus_sm/50k/small/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_50k_small_mlp2_seed42\" --scope classifier_head --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.external_classifier_response \"outputs/scaling_study/10plus_sm/50k/small/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_50k_small_mlp2_seed42\" --external-classes hh4b,hh,vbfh,ggh --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.external_higgs_anomaly --run-dir \"outputs/scaling_study/10plus_sm/50k/small/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_50k_small_mlp2_seed42\" --signals hh4b,hh,vbfh,ggh --n-background-per-class 2000 --n-signal-per-class 2000 --device cpu --batch-size 256 --tsne-max-events-per-class 600 --tsne-perplexity 40.0 --tsne-n-iter 1000 --raise-errors"
+    ]
+  },
+  {
+    "class_configuration": "10plus_sm",
+    "class_names": [
+      "minbias",
+      "qcd",
+      "dy",
+      "tt_hadronic",
+      "tt_leptonic",
+      "tt_semileptonic",
+      "wjets",
+      "ww",
+      "wz",
+      "ttw",
+      "ttz"
+    ],
+    "samples_per_class": 100000,
+    "model_size": "medium",
+    "classifier_head": "mlp2",
+    "latent_dim": 128,
+    "ff_dim": 256,
+    "num_heads": 8,
+    "num_attention_blocks": 2,
+    "output_root": "outputs/scaling_study/10plus_sm/100k/medium",
+    "run_name": "scaling_10plus_sm_100k_medium_mlp2_seed42",
+    "train_command": "\"${PY:-python}\" -m ngt_model.training.train_mha --data-source collide2v_updated --class-names minbias,qcd,dy,tt_hadronic,tt_leptonic,tt_semileptonic,wjets,ww,wz,ttw,ttz --n-events-per-class 100000 --epochs 50 --early-stopping-patience 10 --batch-size 256 --num-workers 0 --latent-dim 128 --ff-dim 256 --num-heads 8 --num-attention-blocks 2 --pooling-mode mean --classifier-head mlp2 --loss-mode ce --latent-var-reg-weight 0.01 --latent-cov-reg-weight 0.001 --augmentation-copies 1 --class-weight-mode none --seed 42 --output-root outputs/scaling_study/10plus_sm/100k/medium --run-name scaling_10plus_sm_100k_medium_mlp2_seed42 --eval-quality-events 2000 --mlflow-enable --mlflow-tracking-uri https://ml.cern.ch/models --mlflow-experiment ngt_model_scaling_study --mlflow-run-name scaling_10plus_sm_100k_medium_mlp2_seed42",
+    "run_dir_bash": "outputs/scaling_study/10plus_sm/100k/medium/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_100k_medium_mlp2_seed42",
+    "diagnostics_commands": [
+      "\"${PY:-python}\" -m ngt_model.evaluation.latent_diagnostics \"outputs/scaling_study/10plus_sm/100k/medium/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_100k_medium_mlp2_seed42\"",
+      "\"${PY:-python}\" -m ngt_model.evaluation.latent_fisher \"outputs/scaling_study/10plus_sm/100k/medium/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_100k_medium_mlp2_seed42\" --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.head_fisher \"outputs/scaling_study/10plus_sm/100k/medium/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_100k_medium_mlp2_seed42\" --scope classifier_head --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.external_classifier_response \"outputs/scaling_study/10plus_sm/100k/medium/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_100k_medium_mlp2_seed42\" --external-classes hh4b,hh,vbfh,ggh --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.external_higgs_anomaly --run-dir \"outputs/scaling_study/10plus_sm/100k/medium/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_100k_medium_mlp2_seed42\" --signals hh4b,hh,vbfh,ggh --n-background-per-class 2000 --n-signal-per-class 2000 --device cpu --batch-size 256 --tsne-max-events-per-class 600 --tsne-perplexity 40.0 --tsne-n-iter 1000 --raise-errors"
+    ]
+  },
+  {
+    "class_configuration": "10plus_sm",
+    "class_names": [
+      "minbias",
+      "qcd",
+      "dy",
+      "tt_hadronic",
+      "tt_leptonic",
+      "tt_semileptonic",
+      "wjets",
+      "ww",
+      "wz",
+      "ttw",
+      "ttz"
+    ],
+    "samples_per_class": 150000,
+    "model_size": "large",
+    "classifier_head": "mlp2",
+    "latent_dim": 128,
+    "ff_dim": 256,
+    "num_heads": 8,
+    "num_attention_blocks": 4,
+    "output_root": "outputs/scaling_study/10plus_sm/150k/large",
+    "run_name": "scaling_10plus_sm_150k_large_mlp2_seed42",
+    "train_command": "\"${PY:-python}\" -m ngt_model.training.train_mha --data-source collide2v_updated --class-names minbias,qcd,dy,tt_hadronic,tt_leptonic,tt_semileptonic,wjets,ww,wz,ttw,ttz --n-events-per-class 150000 --epochs 50 --early-stopping-patience 10 --batch-size 256 --num-workers 0 --latent-dim 128 --ff-dim 256 --num-heads 8 --num-attention-blocks 4 --pooling-mode mean --classifier-head mlp2 --loss-mode ce --latent-var-reg-weight 0.01 --latent-cov-reg-weight 0.001 --augmentation-copies 1 --class-weight-mode none --seed 42 --output-root outputs/scaling_study/10plus_sm/150k/large --run-name scaling_10plus_sm_150k_large_mlp2_seed42 --eval-quality-events 2000 --mlflow-enable --mlflow-tracking-uri https://ml.cern.ch/models --mlflow-experiment ngt_model_scaling_study --mlflow-run-name scaling_10plus_sm_150k_large_mlp2_seed42",
+    "run_dir_bash": "outputs/scaling_study/10plus_sm/150k/large/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_150k_large_mlp2_seed42",
+    "diagnostics_commands": [
+      "\"${PY:-python}\" -m ngt_model.evaluation.latent_diagnostics \"outputs/scaling_study/10plus_sm/150k/large/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_150k_large_mlp2_seed42\"",
+      "\"${PY:-python}\" -m ngt_model.evaluation.latent_fisher \"outputs/scaling_study/10plus_sm/150k/large/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_150k_large_mlp2_seed42\" --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.head_fisher \"outputs/scaling_study/10plus_sm/150k/large/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_150k_large_mlp2_seed42\" --scope classifier_head --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.external_classifier_response \"outputs/scaling_study/10plus_sm/150k/large/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_150k_large_mlp2_seed42\" --external-classes hh4b,hh,vbfh,ggh --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.external_higgs_anomaly --run-dir \"outputs/scaling_study/10plus_sm/150k/large/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_150k_large_mlp2_seed42\" --signals hh4b,hh,vbfh,ggh --n-background-per-class 2000 --n-signal-per-class 2000 --device cpu --batch-size 256 --tsne-max-events-per-class 600 --tsne-perplexity 40.0 --tsne-n-iter 1000 --raise-errors"
+    ]
+  },
+  {
+    "class_configuration": "10plus_sm",
+    "class_names": [
+      "minbias",
+      "qcd",
+      "dy",
+      "tt_hadronic",
+      "tt_leptonic",
+      "tt_semileptonic",
+      "wjets",
+      "ww",
+      "wz",
+      "ttw",
+      "ttz"
+    ],
+    "samples_per_class": 200000,
+    "model_size": "xl",
+    "classifier_head": "mlp2",
+    "latent_dim": 256,
+    "ff_dim": 512,
+    "num_heads": 8,
+    "num_attention_blocks": 4,
+    "output_root": "outputs/scaling_study/10plus_sm/200k/xl",
+    "run_name": "scaling_10plus_sm_200k_xl_mlp2_seed42",
+    "train_command": "\"${PY:-python}\" -m ngt_model.training.train_mha --data-source collide2v_updated --class-names minbias,qcd,dy,tt_hadronic,tt_leptonic,tt_semileptonic,wjets,ww,wz,ttw,ttz --n-events-per-class 200000 --epochs 50 --early-stopping-patience 10 --batch-size 256 --num-workers 0 --latent-dim 256 --ff-dim 512 --num-heads 8 --num-attention-blocks 4 --pooling-mode mean --classifier-head mlp2 --loss-mode ce --latent-var-reg-weight 0.01 --latent-cov-reg-weight 0.001 --augmentation-copies 1 --class-weight-mode none --seed 42 --output-root outputs/scaling_study/10plus_sm/200k/xl --run-name scaling_10plus_sm_200k_xl_mlp2_seed42 --eval-quality-events 2000 --mlflow-enable --mlflow-tracking-uri https://ml.cern.ch/models --mlflow-experiment ngt_model_scaling_study --mlflow-run-name scaling_10plus_sm_200k_xl_mlp2_seed42",
+    "run_dir_bash": "outputs/scaling_study/10plus_sm/200k/xl/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_200k_xl_mlp2_seed42",
+    "diagnostics_commands": [
+      "\"${PY:-python}\" -m ngt_model.evaluation.latent_diagnostics \"outputs/scaling_study/10plus_sm/200k/xl/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_200k_xl_mlp2_seed42\"",
+      "\"${PY:-python}\" -m ngt_model.evaluation.latent_fisher \"outputs/scaling_study/10plus_sm/200k/xl/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_200k_xl_mlp2_seed42\" --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.head_fisher \"outputs/scaling_study/10plus_sm/200k/xl/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_200k_xl_mlp2_seed42\" --scope classifier_head --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.external_classifier_response \"outputs/scaling_study/10plus_sm/200k/xl/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_200k_xl_mlp2_seed42\" --external-classes hh4b,hh,vbfh,ggh --n-events-per-class 2000 --device cpu --batch-size 256",
+      "\"${PY:-python}\" -m ngt_model.evaluation.external_higgs_anomaly --run-dir \"outputs/scaling_study/10plus_sm/200k/xl/runs/${RUN_DATE:-$(date +%F)}/scaling_10plus_sm_200k_xl_mlp2_seed42\" --signals hh4b,hh,vbfh,ggh --n-background-per-class 2000 --n-signal-per-class 2000 --device cpu --batch-size 256 --tsne-max-events-per-class 600 --tsne-perplexity 40.0 --tsne-n-iter 1000 --raise-errors"
+    ]
+  }
+]

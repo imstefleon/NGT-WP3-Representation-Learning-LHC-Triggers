@@ -5,7 +5,8 @@ Extracted from the streaming/preprocessing cells of
 `NGT_Linformer_NodesAligned_FullPrecision_Collide2V_L1features.ipynb` so the
 logic isn't duplicated across the MHA notebook, `eval_quality_collide2v.py`,
 and `scale_test.py`. Behavior (top-pT candidate selection, normalization,
-PID one-hot encoding, caching) is kept identical to the notebook.
+PID one-hot encoding, caching) is kept identical to the notebook.  expected as the ctl2model, need be partitioner for future advances
+
 
 Usage:
     from ngt_model.datasets.collide2v_data import Collide2VConfig, Collide2VLoader
@@ -99,7 +100,8 @@ COLLIDE2V_CLASS_PATH_HINTS = {
     'dy_mumu': ['dy_mumu', 'dy-mumu', 'dytomumu', 'dyjets_to_mumu', 'dyjetstomumu', 'ztomumu'],
     'dy_tautau': ['dy_tautau', 'dy-tautau', 'dytotautau', 'dyjets_to_tautau', 'dyjetstotautau', 'ztotautau'],
     'wjets': ['wjets', 'w_jets', 'wjetstolnu', 'w_to_lnu'],
-    'ww': ['ww_hadronic', 'ww_leptonic', 'ww_semileptonic', 'ww'],
+    # The aggregate WW class should be built only from genuine WW final states.
+    'ww': ['ww_hadronic', 'ww_leptonic', 'ww_semileptonic'],
     'ww_hadronic': ['ww_hadronic', 'ww-hadronic'],
     'ww_leptonic': ['ww_leptonic', 'ww-leptonic'],
     'ww_semileptonic': ['ww_semileptonic', 'ww-semileptonic'],
@@ -214,6 +216,18 @@ class Collide2VLoader:
             selected[feature_name] = key
         return selected
 
+    @staticmethod
+    def _cache_shard_suffix(event_stride: int, event_offset: int) -> str:
+        if event_stride <= 1:
+            return ""
+        return f"_shard{event_offset:04d}of{event_stride:04d}"
+
+    @staticmethod
+    def _keep_sharded_event(valid_event_index: int, event_stride: int, event_offset: int) -> bool:
+        if event_stride <= 1:
+            return True
+        return (valid_event_index % event_stride) == event_offset
+
     # -- collide2v_updated -------------------------------------------------
 
     def _list_collide2v_parquet_files(self, class_name: str) -> List[Path]:
@@ -235,14 +249,22 @@ class Collide2VLoader:
                 matched.append(path)
         return matched
 
-    def _stream_from_collide2v_updated(self, class_name: str, target_events: int, cache_prefix: str) -> np.ndarray:
+    def _stream_from_collide2v_updated(
+        self,
+        class_name: str,
+        target_events: int,
+        cache_prefix: str,
+        event_stride: int = 1,
+        event_offset: int = 0,
+    ) -> np.ndarray:
         import pyarrow as pa
         import pyarrow.parquet as pq
 
         cfg = self.cfg
+        shard_suffix = self._cache_shard_suffix(event_stride, event_offset)
         cache_path = (cfg.cache_dir /
                       f'{cache_prefix}_{class_name}_{target_events}_{cfg.feature_set_name}_'
-                      f'{cfg.candidate_selection}_collide2v_updated_rawtensor.npy')
+                      f'{cfg.candidate_selection}{shard_suffix}_collide2v_updated_rawtensor.npy')
         if cache_path.exists():
             log(f'{class_name}: loading raw tensor cache {cache_path}')
             return np.load(cache_path, mmap_mode=None)
@@ -259,6 +281,7 @@ class Collide2VLoader:
         selected_seen = None
         files_used = 0
         schema_mismatches = 0
+        valid_global_index = 0
 
         for path in files:
             if len(events) >= target_events:
@@ -299,14 +322,17 @@ class Collide2VLoader:
                         n_seen += 1
                         event = self._make_event_tensor(arrays)
                         if event is not None:
-                            events.append(event)
+                            if self._keep_sharded_event(valid_global_index, event_stride, event_offset):
+                                events.append(event)
                             n_valid += 1
+                            valid_global_index += 1
 
                         now = time.time()
                         if (n_seen % 1000 == 0) or (now - last_log > 10):
                             elapsed = max(now - file_start, 1e-6)
                             log(f'{class_name}: file_seen={n_seen:,}, file_valid={n_valid:,}, '
-                                f'class_loaded={len(events):,}/{target_events:,}, rate={n_seen/elapsed:.1f} ev/s')
+                                f'class_loaded={len(events):,}/{target_events:,}, '
+                                f'shard={event_offset}/{event_stride}, rate={n_seen/elapsed:.1f} ev/s')
                             last_log = now
 
                         if len(events) >= target_events:
@@ -356,20 +382,29 @@ class Collide2VLoader:
             raise RuntimeError(f'{class_name}: no ROOT files found in samples.json entry')
         return files
 
-    def _stream_from_samples_json(self, class_name: str, target_events: int, cache_prefix: str) -> np.ndarray:
+    def _stream_from_samples_json(
+        self,
+        class_name: str,
+        target_events: int,
+        cache_prefix: str,
+        event_stride: int = 1,
+        event_offset: int = 0,
+    ) -> np.ndarray:
         import uproot
         import awkward as ak
 
         cfg = self.cfg
+        shard_suffix = self._cache_shard_suffix(event_stride, event_offset)
         cache_path = (cfg.cache_dir /
                       f'{cache_prefix}_{class_name}_{target_events}_{cfg.feature_set_name}_'
-                      f'{cfg.candidate_selection}_samplesjson_rawtensor.npy')
+                      f'{cfg.candidate_selection}{shard_suffix}_samplesjson_rawtensor.npy')
         if cache_path.exists():
             log(f'{class_name}: loading raw tensor cache {cache_path}')
             return np.load(cache_path, mmap_mode=None)
 
         events: List[np.ndarray] = []
         root_files = self._root_files_for_class(class_name)
+        valid_global_index = 0
         log('=' * 90)
         log(f'{class_name}: DATA_SOURCE=samples_json, target={target_events:,}, root_files={root_files}')
 
@@ -411,14 +446,17 @@ class Collide2VLoader:
                         n_seen += 1
                         event = self._make_event_tensor(arrays)
                         if event is not None:
-                            events.append(event)
+                            if self._keep_sharded_event(valid_global_index, event_stride, event_offset):
+                                events.append(event)
                             n_valid += 1
+                            valid_global_index += 1
 
                         now = time.time()
                         if (n_seen % 500 == 0) or (now - last_log > 10):
                             elapsed = max(now - file_start, 1e-6)
                             log(f'{class_name}: seen={n_seen:,}, valid={n_valid:,}, '
-                                f'class_loaded={len(events):,}/{target_events:,}, rate={n_seen/elapsed:.1f} ev/s')
+                                f'class_loaded={len(events):,}/{target_events:,}, '
+                                f'shard={event_offset}/{event_stride}, rate={n_seen/elapsed:.1f} ev/s')
                             last_log = now
 
                         if len(events) >= target_events:
@@ -447,15 +485,23 @@ class Collide2VLoader:
         files = api.list_repo_files(repo_id=self.cfg.dataset_id, repo_type='dataset')
         return sorted(f for f in files if f.startswith(prefix) and f.endswith('.parquet'))
 
-    def _stream_from_hf(self, class_name: str, target_events: int, cache_prefix: str) -> np.ndarray:
+    def _stream_from_hf(
+        self,
+        class_name: str,
+        target_events: int,
+        cache_prefix: str,
+        event_stride: int = 1,
+        event_offset: int = 0,
+    ) -> np.ndarray:
         import pyarrow as pa
         import pyarrow.parquet as pq
         from huggingface_hub import HfFileSystem
 
         cfg = self.cfg
+        shard_suffix = self._cache_shard_suffix(event_stride, event_offset)
         cache_path = (cfg.cache_dir /
                       f'{cache_prefix}_{class_name}_{target_events}_{cfg.feature_set_name}_'
-                      f'{cfg.candidate_selection}_rawtensor.npy')
+                      f'{cfg.candidate_selection}{shard_suffix}_rawtensor.npy')
         if cache_path.exists():
             log(f'{class_name}: loading raw tensor cache {cache_path}')
             return np.load(cache_path, mmap_mode=None)
@@ -463,6 +509,7 @@ class Collide2VLoader:
         fs = HfFileSystem()
         folders = HF_SAMPLES[class_name]
         events: List[np.ndarray] = []
+        valid_global_index = 0
         log('=' * 90)
         log(f'{class_name}: target={target_events:,}, candidate_folders={folders}')
 
@@ -510,14 +557,17 @@ class Collide2VLoader:
                                 n_seen += 1
                                 event = self._make_event_tensor(arrays)
                                 if event is not None:
-                                    events.append(event)
+                                    if self._keep_sharded_event(valid_global_index, event_stride, event_offset):
+                                        events.append(event)
                                     n_valid += 1
+                                    valid_global_index += 1
 
                                 now = time.time()
                                 if (n_seen % 500 == 0) or (now - last_log > 10):
                                     elapsed = max(now - folder_start, 1e-6)
                                     log(f'{class_name}/{folder}: seen={n_seen:,}, valid={n_valid:,}, '
-                                        f'class_loaded={len(events):,}/{target_events:,}, rate={n_seen/elapsed:.1f} ev/s')
+                                        f'class_loaded={len(events):,}/{target_events:,}, '
+                                        f'shard={event_offset}/{event_stride}, rate={n_seen/elapsed:.1f} ev/s')
                                     last_log = now
 
                                 if len(events) >= target_events:
@@ -541,21 +591,45 @@ class Collide2VLoader:
 
     # -- dispatch / orchestration -------------------------------------------
 
-    def stream_class_raw(self, class_name: str, target_events: int, cache_prefix: str = 'train') -> np.ndarray:
+    def stream_class_raw(
+        self,
+        class_name: str,
+        target_events: int,
+        cache_prefix: str = 'train',
+        event_stride: int = 1,
+        event_offset: int = 0,
+    ) -> np.ndarray:
+        if event_stride < 1:
+            raise ValueError("event_stride must be >= 1")
+        if event_offset < 0 or event_offset >= event_stride:
+            raise ValueError("event_offset must satisfy 0 <= event_offset < event_stride")
         if self.cfg.data_source == 'collide2v_updated':
-            return self._stream_from_collide2v_updated(class_name, target_events, cache_prefix)
+            return self._stream_from_collide2v_updated(
+                class_name, target_events, cache_prefix, event_stride=event_stride, event_offset=event_offset)
         if self.cfg.data_source == 'samples_json':
-            return self._stream_from_samples_json(class_name, target_events, cache_prefix)
+            return self._stream_from_samples_json(
+                class_name, target_events, cache_prefix, event_stride=event_stride, event_offset=event_offset)
         if self.cfg.data_source == 'hf':
-            return self._stream_from_hf(class_name, target_events, cache_prefix)
+            return self._stream_from_hf(
+                class_name, target_events, cache_prefix, event_stride=event_stride, event_offset=event_offset)
         raise ValueError("data_source must be 'collide2v_updated', 'samples_json', or 'hf'")
 
     def load_classes(
-        self, events_per_class: Dict[str, int], cache_prefix: str = 'train'
+        self,
+        events_per_class: Dict[str, int],
+        cache_prefix: str = 'train',
+        event_stride: int = 1,
+        event_offset: int = 0,
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, Dict[str, np.ndarray]]:
         """Streams every class and concatenates into (raw_tensor, y, sample_name, raw_by_class)."""
         raw_by_class = {
-            cls: self.stream_class_raw(cls, events_per_class[cls], cache_prefix=cache_prefix)
+            cls: self.stream_class_raw(
+                cls,
+                events_per_class[cls],
+                cache_prefix=cache_prefix,
+                event_stride=event_stride,
+                event_offset=event_offset,
+            )
             for cls in self.cfg.class_names
         }
         raw_tensor = np.concatenate([raw_by_class[cls] for cls in self.cfg.class_names], axis=0).astype(np.float32)
@@ -571,7 +645,7 @@ class Collide2VLoader:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-#  preprocessing (identical to eval_quality.py / the notebook)
+#  preprocessing (identical to eval_quality.py / ctl2model )
 # ═══════════════════════════════════════════════════════════════════════════
 
 def compute_normalization_constants(data: np.ndarray) -> dict:

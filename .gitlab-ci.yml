@@ -1,0 +1,14 @@
+stages: [test]
+
+quantization_unit_tests:
+  stage: test
+  image: python:3.11-slim
+  variables:
+    GIT_LFS_SKIP_SMUDGE: "1"
+    PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  before_script:
+    - python -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+    - python -m pip install -e ./ctl2_embedding_model/quantized_model
+    - export PYTHONPATH="$CI_PROJECT_DIR/ctl2_embedding_model/ngt_model/src:$CI_PROJECT_DIR/ctl2_embedding_model/quantized_model/src"
+  script:
+    - python -m unittest discover -s ctl2_embedding_model/quantized_model/tests -v

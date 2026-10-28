@@ -1,0 +1,133 @@
+{
+  "cohort": "Calibration subset; do not interpret as independent test",
+  "input_sha256": "b9be9afa784674477e27fbf64cc5d9890bbb3ce37cc4528799400121e963168f",
+  "n_events": 128,
+  "policies": {
+    "post_pool_only": {
+      "excluded_layers": [
+        "input_proj",
+        "attention_blocks.0.q_proj",
+        "attention_blocks.0.k_proj",
+        "attention_blocks.0.v_proj",
+        "attention_blocks.0.out_proj",
+        "attention_blocks.1.q_proj",
+        "attention_blocks.1.k_proj",
+        "attention_blocks.1.v_proj",
+        "attention_blocks.1.out_proj",
+        "attention_blocks.2.q_proj",
+        "attention_blocks.2.k_proj",
+        "attention_blocks.2.v_proj",
+        "attention_blocks.2.out_proj",
+        "attention_blocks.3.q_proj",
+        "attention_blocks.3.k_proj",
+        "attention_blocks.3.v_proj",
+        "attention_blocks.3.out_proj",
+        "pool_score.0",
+        "pool_score.2",
+        "latent",
+        "class_logits"
+      ],
+      "quantized_layers": [
+        "post_pool.0",
+        "post_pool.2"
+      ],
+      "agreement": 1.0,
+      "logits": {
+        "max_absolute_error": 0.24880599975585938,
+        "rmse": 0.035949039741614154,
+        "relative_l2_error": 0.005163766280479078,
+        "mean_cosine_similarity": 0.9999900792602989
+      },
+      "latent": {
+        "max_absolute_error": 0.8189506530761719,
+        "rmse": 0.08884167604210777,
+        "relative_l2_error": 0.0051995288076398275,
+        "mean_cosine_similarity": 0.9999945607301124
+      }
+    },
+    "post_pool_value_output": {
+      "excluded_layers": [
+        "input_proj",
+        "attention_blocks.0.q_proj",
+        "attention_blocks.0.k_proj",
+        "attention_blocks.1.q_proj",
+        "attention_blocks.1.k_proj",
+        "attention_blocks.2.q_proj",
+        "attention_blocks.2.k_proj",
+        "attention_blocks.3.q_proj",
+        "attention_blocks.3.k_proj",
+        "pool_score.0",
+        "pool_score.2",
+        "latent",
+        "class_logits"
+      ],
+      "quantized_layers": [
+        "attention_blocks.0.out_proj",
+        "attention_blocks.0.v_proj",
+        "attention_blocks.1.out_proj",
+        "attention_blocks.1.v_proj",
+        "attention_blocks.2.out_proj",
+        "attention_blocks.2.v_proj",
+        "attention_blocks.3.out_proj",
+        "attention_blocks.3.v_proj",
+        "post_pool.0",
+        "post_pool.2"
+      ],
+      "agreement": 0.3046875,
+      "logits": {
+        "max_absolute_error": 20.665346056222916,
+        "rmse": 5.286092219667725,
+        "relative_l2_error": 0.7593010816315443,
+        "mean_cosine_similarity": 0.7807705580292335
+      },
+      "latent": {
+        "max_absolute_error": 82.15298557281494,
+        "rmse": 9.76937153981347,
+        "relative_l2_error": 0.5717601357466653,
+        "mean_cosine_similarity": 0.9210908352378504
+      }
+    },
+    "post_pool_second_only": {
+      "excluded_layers": [
+        "input_proj",
+        "attention_blocks.0.q_proj",
+        "attention_blocks.0.k_proj",
+        "attention_blocks.0.v_proj",
+        "attention_blocks.0.out_proj",
+        "attention_blocks.1.q_proj",
+        "attention_blocks.1.k_proj",
+        "attention_blocks.1.v_proj",
+        "attention_blocks.1.out_proj",
+        "attention_blocks.2.q_proj",
+        "attention_blocks.2.k_proj",
+        "attention_blocks.2.v_proj",
+        "attention_blocks.2.out_proj",
+        "attention_blocks.3.q_proj",
+        "attention_blocks.3.k_proj",
+        "attention_blocks.3.v_proj",
+        "attention_blocks.3.out_proj",
+        "pool_score.0",
+        "pool_score.2",
+        "post_pool.0",
+        "latent",
+        "class_logits"
+      ],
+      "quantized_layers": [
+        "post_pool.2"
+      ],
+      "agreement": 1.0,
+      "logits": {
+        "max_absolute_error": 0.0878458023071289,
+        "rmse": 0.015833300745588693,
+        "relative_l2_error": 0.002274315672585585,
+        "mean_cosine_similarity": 0.9999948827178796
+      },
+      "latent": {
+        "max_absolute_error": 0.25780487060546875,
+        "rmse": 0.0459905441538841,
+        "relative_l2_error": 0.002691632687048961,
+        "mean_cosine_similarity": 0.9999981645842734
+      }
+    }
+  }
+}

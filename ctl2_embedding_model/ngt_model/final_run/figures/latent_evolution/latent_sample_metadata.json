@@ -1,0 +1,48 @@
+{
+  "run_dir": "outputs/scaling_study/large_100m_80m/one_24h_100m/runs/2026-08-24/scaling_4class_80m_dmodel2016_ff8064_100m_400ep_noaug_ce_infonce005_lr1e5_seed42",
+  "cache_dir": "outputs/scaling_study/large_100m_80m/one_24h_100m/cache",
+  "events_per_class": 2000,
+  "seed": 42,
+  "shard": 0,
+  "class_names": [
+    "minbias",
+    "qcd",
+    "dy",
+    "top"
+  ],
+  "n_features": 5,
+  "sample_meta": [
+    {
+      "class_name": "minbias",
+      "cache_path": "outputs/scaling_study/large_100m_80m/one_24h_100m/cache/train_mha_minbias_5000000_l1_only_top_pt_shard0000of0004_collide2v_updated_rawtensor.npy",
+      "n_available": 5000000,
+      "n_selected": 2000,
+      "first_selected_index": 6164,
+      "last_selected_index": 4994343
+    },
+    {
+      "class_name": "qcd",
+      "cache_path": "outputs/scaling_study/large_100m_80m/one_24h_100m/cache/train_mha_qcd_5000000_l1_only_top_pt_shard0000of0004_collide2v_updated_rawtensor.npy",
+      "n_available": 5000000,
+      "n_selected": 2000,
+      "first_selected_index": 4,
+      "last_selected_index": 4997249
+    },
+    {
+      "class_name": "dy",
+      "cache_path": "outputs/scaling_study/large_100m_80m/one_24h_100m/cache/train_mha_dy_5000000_l1_only_top_pt_shard0000of0004_collide2v_updated_rawtensor.npy",
+      "n_available": 5000000,
+      "n_selected": 2000,
+      "first_selected_index": 2074,
+      "last_selected_index": 4999434
+    },
+    {
+      "class_name": "top",
+      "cache_path": "outputs/scaling_study/large_100m_80m/one_24h_100m/cache/train_mha_top_5000000_l1_only_top_pt_shard0000of0004_collide2v_updated_rawtensor.npy",
+      "n_available": 5000000,
+      "n_selected": 2000,
+      "first_selected_index": 2083,
+      "last_selected_index": 4999831
+    }
+  ]
+}

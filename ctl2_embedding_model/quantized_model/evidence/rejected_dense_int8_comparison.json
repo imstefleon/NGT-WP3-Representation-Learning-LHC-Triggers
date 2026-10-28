@@ -1,0 +1,202 @@
+{
+  "n_events": 512,
+  "source_epoch": 4,
+  "checkpoint_sha256": "f04f026f79b28ee794cef05b09cce5d97f726d9269c56e9ad788214517935cb8",
+  "bundle_sha256": "d7425865ac3d65d5f809428150b6072eee4952d0d3f7665549b138cbdc30db39",
+  "inputs_sha256": "b9be9afa784674477e27fbf64cc5d9890bbb3ce37cc4528799400121e963168f",
+  "raw_inputs": true,
+  "cohort_description": "Numerical pilot: 128 cached events per SM class; possible training overlap; 128 per external signal; not independent physics validation",
+  "torch_version": "2.5.1+cu121",
+  "engine": "x86",
+  "batch_size": 8,
+  "threads": 4,
+  "precision": "ngt_dynamic_int8_v1",
+  "timing": {
+    "fp32": {
+      "seconds": 22.567674599820748,
+      "events_per_second": 22.687317549503604
+    },
+    "int8": {
+      "seconds": 17.391313400119543,
+      "events_per_second": 29.439984676285615
+    }
+  },
+  "prediction_agreement": 0.2734375,
+  "latent": {
+    "max_absolute_error": 252.637939453125,
+    "rmse": 32.47938134570465,
+    "relative_l2_error": 1.9283326976696593,
+    "mean_cosine_similarity": 0.8899535545739767
+  },
+  "logits": {
+    "max_absolute_error": 68.59955596923828,
+    "rmse": 13.42745801839366,
+    "relative_l2_error": 1.9669604075166138,
+    "mean_cosine_similarity": 0.5719116140995569
+  },
+  "status": "measured_comparison_not_physics_acceptance",
+  "fpga_synthesis_validated": false,
+  "labels_sha256": "cdff801613d539e7e1176f0b2e1dcdb4617634c92db690bbd2a92791f5f49c70",
+  "classification": {
+    "fp32": {
+      "accuracy": 0.501953125,
+      "macro_f1": 0.43082234559461796
+    },
+    "int8": {
+      "accuracy": 0.265625,
+      "macro_f1": 0.2551378262236663
+    }
+  },
+  "anomaly": {
+    "method": "minbias_mahalanobis",
+    "fit_inputs_sha256": "555261211dc137fc800126b03f44b02112584de7c859ca487e848403186663de",
+    "threshold_policy": "independently recalibrated from the same held-out background events",
+    "uncertainty_note": "Signal binomial errors exclude threshold uncertainty; 99.5% tails require large background samples.",
+    "signals": {
+      "hh4b": {
+        "fp32": {
+          "roc_auc": 0.789031982421875,
+          "n_background": 512,
+          "n_signal": 128,
+          "95": {
+            "background_threshold": 5236.4489693431915,
+            "background_acceptance": 0.05078125,
+            "signal_efficiency": 0.0859375,
+            "signal_binomial_standard_error": 0.024772755652276997
+          },
+          "99": {
+            "background_threshold": 6060.04675241469,
+            "background_acceptance": 0.01171875,
+            "signal_efficiency": 0.0234375,
+            "signal_binomial_standard_error": 0.01337213275159097
+          },
+          "99.5": {
+            "background_threshold": 6940.917631013203,
+            "background_acceptance": 0.005859375,
+            "signal_efficiency": 0.0078125,
+            "signal_binomial_standard_error": 0.007781922583256459
+          }
+        },
+        "int8": {
+          "roc_auc": 0.6350250244140625,
+          "n_background": 512,
+          "n_signal": 128,
+          "95": {
+            "background_threshold": 75.66246448736861,
+            "background_acceptance": 0.05078125,
+            "signal_efficiency": 0.1171875,
+            "signal_binomial_standard_error": 0.02842954419533132
+          },
+          "99": {
+            "background_threshold": 169.2634733110884,
+            "background_acceptance": 0.01171875,
+            "signal_efficiency": 0.03125,
+            "signal_binomial_standard_error": 0.015378921628929319
+          },
+          "99.5": {
+            "background_threshold": 190.50466185327525,
+            "background_acceptance": 0.005859375,
+            "signal_efficiency": 0.03125,
+            "signal_binomial_standard_error": 0.015378921628929319
+          }
+        },
+        "int8_with_frozen_fp32_detector": {
+          "roc_auc": 0.6183624267578125,
+          "n_background": 512,
+          "n_signal": 128,
+          "95": {
+            "background_threshold": 13580.650116983614,
+            "background_acceptance": 0.05078125,
+            "signal_efficiency": 0.0390625,
+            "signal_binomial_standard_error": 0.01712468546557635
+          },
+          "99": {
+            "background_threshold": 20043.179650225768,
+            "background_acceptance": 0.01171875,
+            "signal_efficiency": 0.015625,
+            "signal_binomial_standard_error": 0.010961886875314282
+          },
+          "99.5": {
+            "background_threshold": 29241.683051245782,
+            "background_acceptance": 0.005859375,
+            "signal_efficiency": 0.015625,
+            "signal_binomial_standard_error": 0.010961886875314282
+          }
+        },
+        "signal_inputs_sha256": "f35107422ff0ec545c7d631d1d24d180dc6d6710093625fc2d85ab846e2d80d0"
+      },
+      "vbfh": {
+        "fp32": {
+          "roc_auc": 0.7417144775390625,
+          "n_background": 512,
+          "n_signal": 128,
+          "95": {
+            "background_threshold": 5236.4489693431915,
+            "background_acceptance": 0.05078125,
+            "signal_efficiency": 0.046875,
+            "signal_binomial_standard_error": 0.018682740693075187
+          },
+          "99": {
+            "background_threshold": 6060.04675241469,
+            "background_acceptance": 0.01171875,
+            "signal_efficiency": 0.0234375,
+            "signal_binomial_standard_error": 0.01337213275159097
+          },
+          "99.5": {
+            "background_threshold": 6940.917631013203,
+            "background_acceptance": 0.005859375,
+            "signal_efficiency": 0.015625,
+            "signal_binomial_standard_error": 0.010961886875314282
+          }
+        },
+        "int8": {
+          "roc_auc": 0.5126495361328125,
+          "n_background": 512,
+          "n_signal": 128,
+          "95": {
+            "background_threshold": 75.66246448736861,
+            "background_acceptance": 0.05078125,
+            "signal_efficiency": 0.0078125,
+            "signal_binomial_standard_error": 0.007781922583256459
+          },
+          "99": {
+            "background_threshold": 169.2634733110884,
+            "background_acceptance": 0.01171875,
+            "signal_efficiency": 0.0,
+            "signal_binomial_standard_error": 0.0
+          },
+          "99.5": {
+            "background_threshold": 190.50466185327525,
+            "background_acceptance": 0.005859375,
+            "signal_efficiency": 0.0,
+            "signal_binomial_standard_error": 0.0
+          }
+        },
+        "int8_with_frozen_fp32_detector": {
+          "roc_auc": 0.5319976806640625,
+          "n_background": 512,
+          "n_signal": 128,
+          "95": {
+            "background_threshold": 13580.650116983614,
+            "background_acceptance": 0.05078125,
+            "signal_efficiency": 0.0,
+            "signal_binomial_standard_error": 0.0
+          },
+          "99": {
+            "background_threshold": 20043.179650225768,
+            "background_acceptance": 0.01171875,
+            "signal_efficiency": 0.0,
+            "signal_binomial_standard_error": 0.0
+          },
+          "99.5": {
+            "background_threshold": 29241.683051245782,
+            "background_acceptance": 0.005859375,
+            "signal_efficiency": 0.0,
+            "signal_binomial_standard_error": 0.0
+          }
+        },
+        "signal_inputs_sha256": "d6ee78bc95136b7c578a636e57aa8213b6454901946a800fadb6b32690552f4d"
+      }
+    }
+  }
+}

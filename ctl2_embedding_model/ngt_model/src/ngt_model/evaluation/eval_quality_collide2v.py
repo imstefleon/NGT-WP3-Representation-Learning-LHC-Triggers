@@ -19,14 +19,6 @@ run over the whole diverse eval set, benefit from sample diversity) but are not
 part of the GMM-gap/Mahalanobis terms -- this mirrors the project's actual
 DY-vs-MinBias research question rather than Maciej's HH_4b/SM-background framing.
 
-Usage (CLI):
-    python eval_quality_collide2v.py /path/to/mha_nodes_aligned_best_for_eval.pt \\
-        --n-events-per-class 2000 --output scores.json
-
-Usage (module):
-    from ngt_model.evaluation.eval_quality_collide2v import EvalCollide2V
-    ev = EvalCollide2V(model, n_events_per_class=2000)
-    print(ev.score, ev.scores)
 """
 
 from __future__ import annotations

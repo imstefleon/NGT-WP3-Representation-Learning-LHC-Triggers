@@ -1,0 +1,98 @@
+[
+  {
+    "signal": "hh4b",
+    "metric": "eff_at_95pct_bg",
+    "x": "params",
+    "slope": 0.22213884459364835,
+    "intercept": -2.0890850451167737,
+    "n_points": 4
+  },
+  {
+    "signal": "hh4b",
+    "metric": "eff_at_95pct_bg",
+    "x": "samples",
+    "slope": 0.22478332305215298,
+    "intercept": -1.8824234448369341,
+    "n_points": 4
+  },
+  {
+    "signal": "hh4b",
+    "metric": "eff_at_99pct_bg",
+    "x": "params",
+    "slope": 0.3942588072546412,
+    "intercept": -3.821503474366534,
+    "n_points": 4
+  },
+  {
+    "signal": "hh4b",
+    "metric": "eff_at_99pct_bg",
+    "x": "samples",
+    "slope": 0.39871344446998036,
+    "intercept": -3.4535140463601195,
+    "n_points": 4
+  },
+  {
+    "signal": "hh4b",
+    "metric": "eff_at_99_5pct_bg",
+    "x": "params",
+    "slope": 0.4124879381918834,
+    "intercept": -4.211951796319012,
+    "n_points": 4
+  },
+  {
+    "signal": "hh4b",
+    "metric": "eff_at_99_5pct_bg",
+    "x": "samples",
+    "slope": 0.4172569577008501,
+    "intercept": -3.827492545303193,
+    "n_points": 4
+  },
+  {
+    "signal": "vbfh",
+    "metric": "eff_at_95pct_bg",
+    "x": "params",
+    "slope": 0.3067204104803941,
+    "intercept": -2.59238053437877,
+    "n_points": 4
+  },
+  {
+    "signal": "vbfh",
+    "metric": "eff_at_95pct_bg",
+    "x": "samples",
+    "slope": 0.3103256951544697,
+    "intercept": -2.3067988395239087,
+    "n_points": 4
+  },
+  {
+    "signal": "vbfh",
+    "metric": "eff_at_99pct_bg",
+    "x": "params",
+    "slope": 0.52728469010287,
+    "intercept": -4.5499972375557665,
+    "n_points": 4
+  },
+  {
+    "signal": "vbfh",
+    "metric": "eff_at_99pct_bg",
+    "x": "samples",
+    "slope": 0.5339106123623256,
+    "intercept": -4.061202887711583,
+    "n_points": 4
+  },
+  {
+    "signal": "vbfh",
+    "metric": "eff_at_99_5pct_bg",
+    "x": "params",
+    "slope": 0.5151643077792372,
+    "intercept": -4.7320688758308735,
+    "n_points": 4
+  },
+  {
+    "signal": "vbfh",
+    "metric": "eff_at_99_5pct_bg",
+    "x": "samples",
+    "slope": 0.5218729152443521,
+    "intercept": -4.255690803676561,
+    "n_points": 4
+  }
+]
