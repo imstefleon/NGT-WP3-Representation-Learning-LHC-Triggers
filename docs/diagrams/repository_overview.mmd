@@ -1,0 +1,8 @@
+flowchart TD
+    R["NGT WP3 - L1 event representation learning"] --> N["ngt_model<br/>PyTorch MHA and selected 100M checkpoint"]
+    R --> C["ctl2_model<br/>Keras / HGQ Linformer and Kedro pipelines"]
+    N --> Q["quantized_model<br/>Selective INT8 CPU inference"]
+    N --> D["docs<br/>Analyses, reports and measured evidence"]
+    Q --> D
+    C --> D
+    R --> A["archive<br/>Earlier notebooks and run outputs"]

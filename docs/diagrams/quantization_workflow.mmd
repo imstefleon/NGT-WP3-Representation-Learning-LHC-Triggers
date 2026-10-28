@@ -1,0 +1,11 @@
+flowchart TD
+    A["Selected epoch-4 FP32 checkpoint"] --> B["Strict state-dict loading<br/>frozen run configuration"]
+    B --> C["Selective INT8 conversion<br/>post_pool.0 and post_pool.2"]
+    B --> F["FP32 reference inference"]
+    C --> D["Mixed-precision CPU bundle<br/>attention, pooling, latent and classifier stay FP32"]
+    D --> E["Save, reload and check finite outputs"]
+    E --> Q["Mixed-precision inference"]
+    F --> P["Paired comparison on identical events"]
+    Q --> P
+    P --> R["Evidence<br/>latent / logit drift, classification and anomaly metrics"]
+    R --> H["Independent held-out physics validation<br/>and target-hardware study"]

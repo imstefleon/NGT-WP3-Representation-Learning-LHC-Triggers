@@ -1,0 +1,7 @@
+flowchart LR
+    A["Configured ROOT samples"] --> B["load_data<br/>TriggerFlow loader and metadata"]
+    B --> C["data_processing<br/>normalization, PID encoding and GSEAL augmentation"]
+    C --> D["model_training<br/>HGQ Linformer + contrastive training"]
+    D --> E["model_validation<br/>classifier response, anomaly scores and rate-efficiency curves"]
+    E --> F["compile<br/>model surgery, calibration and da4ml tracing"]
+    F --> G["RTL / HLS generation and numerical comparison<br/>requires the corresponding FPGA toolchain"]

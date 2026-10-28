@@ -1,0 +1,13 @@
+flowchart TD
+    A["Collide-2V event<br/>top-pT L1 candidates: 100 x 5"] --> B["Frozen training preprocessing<br/>normalized pt / eta / phi; original dxy and PID scales"]
+    B --> M["Nonzero-candidate mask"]
+    B --> C["Input projection<br/>Linear 5 to 2016 + ReLU"]
+    C --> D["4 StandardMHA blocks with residual additions<br/>16 heads; Q / K / V / output projections"]
+    D --> E["Learned attention pooling<br/>candidate scores and masked weighted sum"]
+    M --> E
+    E --> F["post_pool.0<br/>Linear 2016 to 8064 + ReLU"]
+    F --> G["post_pool.2<br/>Linear 8064 to 2016 + ReLU"]
+    G --> Z["Latent projection<br/>Linear 2016 to 128"]
+    Z --> L["Classifier logits<br/>Linear 128 to 4"]
+    L --> O["Class order<br/>minbias, qcd, dy, top"]
+    Z --> V["Offline evaluation<br/>latent diagnostics and external-signal anomaly scores"]

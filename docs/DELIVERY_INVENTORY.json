@@ -1,0 +1,1096 @@
+{
+  "scope": "Curated model/evidence files and current navigation; unchanged historical sources are mapped in reorganization_map.json",
+  "publication": "authorized after README review and successful local checks",
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 152,
+      "sha256": "9bbebf2c6b828377e21de76c698012e082e3a78109a689914f2bd61b163e22e3"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 214,
+      "sha256": "01c97484531153109dd472e3df63f2f2253dafc050861d1b88f9bd19495f6465"
+    },
+    {
+      "path": ".gitlab-ci.yml",
+      "bytes": 418,
+      "sha256": "6b9d42c11ae292d671dcb168efa93a0473757388e9aae2f2b91100c4f8de3688"
+    },
+    {
+      "path": "README.md",
+      "bytes": 4201,
+      "sha256": "1a69d7a2473096332159f47bb2f262aad432237d738758f6454fd119c9c80442"
+    },
+    {
+      "path": "archive/README.md",
+      "bytes": 642,
+      "sha256": "dda4184e7cb329451b82d09718aabb8d52fd6543650ceee58e68e864f893eb59"
+    },
+    {
+      "path": "archive/workspace_overview_before_reorganization.md",
+      "bytes": 1304,
+      "sha256": "a03c0783224606dc2aa47a99d34483d6cd4282f19e7fb42da17ddbbca3292d96"
+    },
+    {
+      "path": "ctl2_model/README.md",
+      "bytes": 4901,
+      "sha256": "d93aa237839e01a3222ced04a2a52ae02144172034962f15dfc08a48a95c68f2"
+    },
+    {
+      "path": "ctl2_model/conf/README.md",
+      "bytes": 1073,
+      "sha256": "c1dc77c82d801a4db176465d87c023a063195803452a917ba5ecc7c200d66eb1"
+    },
+    {
+      "path": "ctl2_model/conf/local/credentials.example.yml",
+      "bytes": 72,
+      "sha256": "645cda3881369d672e9be6fdff7d49f2270d409ff128a7098310a0cc1a678d5a"
+    },
+    {
+      "path": "docs/DELIVERY.md",
+      "bytes": 5815,
+      "sha256": "3a700ceec57ff17ed09d1ca9ef17b0e6534969105d73ff32ddf6aca2c781ea1b"
+    },
+    {
+      "path": "docs/LOCAL_CHECKS.json",
+      "bytes": 1206,
+      "sha256": "79b3836386e4b0fb65f9ed11094ed231ec882415d5c28b9d593d935433b5923c"
+    },
+    {
+      "path": "docs/README.md",
+      "bytes": 1475,
+      "sha256": "4643fb593ca5f64c90b7990cf251899c796be78c33f893c30786c429d2e6060b"
+    },
+    {
+      "path": "docs/TRACKED_FILE_PRESERVATION.json",
+      "bytes": 321615,
+      "sha256": "e6912f16c202acc4bd1799a44ca55191b344f413a695590ce158dfee37cc5377"
+    },
+    {
+      "path": "docs/analysis/1m_500k_scaling_analysis.md",
+      "bytes": 10815,
+      "sha256": "1c98faf845e28966385974d0d4ec42591e51e15fe7ab3383ea115a34d0573106"
+    },
+    {
+      "path": "docs/analysis/README.md",
+      "bytes": 2278,
+      "sha256": "c4d244c2e5233399312500f2d7d61db880dae313c955ad7d09d47b0ee6a91a40"
+    },
+    {
+      "path": "docs/analysis/baseline_1k_100k.md",
+      "bytes": 4188,
+      "sha256": "4a1d9aadbf2d5f2d9cfa2bc970e91f5b5b3aca1249cd44a52066637711273645"
+    },
+    {
+      "path": "docs/analysis/best_config_finding_and_latent_sweep.md",
+      "bytes": 7984,
+      "sha256": "5b596fbfa0e12063069867ebd0084dd0f221b07a7e125cd12a63f9010755474f"
+    },
+    {
+      "path": "docs/analysis/dataset_diagnostics_and_runs.md",
+      "bytes": 9700,
+      "sha256": "b20e038bb596f9cbcd74d8ce94efea779a1e64ac56a9019cce0af777f4c12fe1"
+    },
+    {
+      "path": "docs/analysis/diagrams/anomaly_metric_pipeline_mockup.png",
+      "bytes": 624589,
+      "sha256": "9e1cba50d6fe98850f8c5d63ab1dff7b0fc09e2439ccca4ad14cbdd490276268"
+    },
+    {
+      "path": "docs/analysis/diagrams/ngt_mha_architecture_horizontal.mmd",
+      "bytes": 1608,
+      "sha256": "b7e5e8419f50307b2fbb7fba78b846a440c6b3b3958d006a189d77719dd8cb54"
+    },
+    {
+      "path": "docs/analysis/diagrams/ngt_mha_architecture_vertical.mmd",
+      "bytes": 1229,
+      "sha256": "603e7ba21d5cf796fa7488797b7889e843429cb82ef5ac49f9ad97ca3371bae0"
+    },
+    {
+      "path": "docs/analysis/dy_minbias_followups.md",
+      "bytes": 5372,
+      "sha256": "ba6a5653e8ffdc92e0d45b2fb34fd3d659275e533695e4d62cad0703669745e1"
+    },
+    {
+      "path": "docs/analysis/dy_minbias_latent_space.md",
+      "bytes": 6125,
+      "sha256": "f6194baaf3bdd18343f09f41cc11313d3b8936b569a0d209a13c354de4c1ad54"
+    },
+    {
+      "path": "docs/analysis/external_higgs_signal_evaluation.md",
+      "bytes": 19373,
+      "sha256": "fc080562e503920925452c4c3814ceab3bc9d1168dc157095903e099cd33998a"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_1m_vbf_hh4b_995/1m_auc_eff99_eff995_hh4b_vbfh.png",
+      "bytes": 184369,
+      "sha256": "0880e4ea370fa3ccdb06e9efe9b739baf6c101ffd8ffddf3ccfec2d7f57e7dee"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_1m_vbf_hh4b_995/1m_eff995_hh4b_vbfh_comparison.png",
+      "bytes": 95364,
+      "sha256": "d9a11c5dd14ce6ad15a1e2b1773f2bf58d4e0f610edb0ef6cdc40e9341d5b250"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_1m_vbf_hh4b_995/1m_medium_varcov_hh4b_minbias_distance_995.png",
+      "bytes": 61124,
+      "sha256": "5c4bae5f5317b398484dfa6a023b36521e0c4f7efad9a355208d0fbd57ab58b4"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_1m_vbf_hh4b_995/1m_medium_varcov_vbfh_minbias_distance_995.png",
+      "bytes": 61876,
+      "sha256": "82434c2426a16395871063eee6223b757542cbf3b53ea2f212b7bd9215d0797a"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_1m_vbf_hh4b_995/README.md",
+      "bytes": 1536,
+      "sha256": "b037a1523891ba7ab8f473d960d79db28a4bcbe4ad04c75312a8b7ee9149d63c"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_1m_vbf_hh4b_995/best_1m_ff256_varcov_external_higgs_tsne.png",
+      "bytes": 565616,
+      "sha256": "3d228221f4adaee000b0ec53c265db08f78575a63b2deae348a259d3b02beab5"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_1m_vbf_hh4b_995/best_1m_ff256_varcov_loss_only.png",
+      "bytes": 71011,
+      "sha256": "dc59008dcd445b5230dd3dcf4e4c6d48ad6fdae112f40c660ff6f60c95f38a83"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_1m_vbf_hh4b_995/best_1m_ff256_varcov_minbias_vs_anomalies_tsne.png",
+      "bytes": 409516,
+      "sha256": "9934229ad468a8964115f74b13a84a4cd7565a8e18a69d4a6330f991049acfe4"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_1m_vbf_hh4b_995/best_1m_ff256_varcov_training_loss.png",
+      "bytes": 199796,
+      "sha256": "003af850de6746b5f17026b442fb61411ce540753bca643f94d95ec075e094e2"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_study/4class_best_val_loss_vs_scale.png",
+      "bytes": 157376,
+      "sha256": "4dcff02cbcf2870a58659ddcc2fd0e0c9b700a9fd4de65b02fe9b839e0a91332"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_study/4class_best_val_loss_vs_scale_scatter_clean.png",
+      "bytes": 217189,
+      "sha256": "3969a90199802d758a8a99735bb78c99dec15a534b39648d3c4edca43500b5c3"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_study/class_granularity_minbias_auc_summary.png",
+      "bytes": 113927,
+      "sha256": "af27e76c4d861a8b90ff0dd148893212976df2f45a88fbf66dafaef7f2d3774a"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_study/hh4b_eff95_noaug_all_scored_runs_scatter.png",
+      "bytes": 137671,
+      "sha256": "67fcda7e2cf4b4f5db85eaa79ea0889043ae3bafbf6deaf1c80d36eebc2511c3"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_study/hh4b_efficiency_granularity_and_input_size.png",
+      "bytes": 301823,
+      "sha256": "510715160f0454e167a3ea2b86df854076618a67a3c6b34dd672bea24240eb12"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_study/hh4b_efficiency_noaug_selected_scaling.png",
+      "bytes": 306630,
+      "sha256": "a59a00925a857188c33ec3dafde0bfe85de8a21b03ac1bf46c790fb6624668b7"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_study/hh4b_granularity_updated_4class_noaug_eff95.png",
+      "bytes": 165036,
+      "sha256": "b5b851620f291635fcd036c08ff3f1068fa6d95e8c1434ef0db016836d22bb26"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_study/hh4b_granularity_updated_4class_noaug_table.png",
+      "bytes": 110354,
+      "sha256": "41bb0793f52638769f982870977c18dc0ea45f13af749b477ff009c018769f71"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_study/hh4b_minbias_distance_by_granularity_100k.png",
+      "bytes": 139335,
+      "sha256": "7639be151307feaeff3ff64fa3a15791707caa856e91920500dda117d471e5dc"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_study/hh4b_minbias_distance_by_input_size_4class.png",
+      "bytes": 282567,
+      "sha256": "1266fe9fa778b205681156308dc221f4d7149912c6a60764facf318529c8ffd9"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_study/hh4b_minbias_distance_by_input_size_4class_noaug.png",
+      "bytes": 221184,
+      "sha256": "86f21eab131a93c4e613c3fb41828a5e2e25412303952a73e27edc4f67680282"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_study/hh4b_minbias_distance_granularity_100k_clean.png",
+      "bytes": 139335,
+      "sha256": "7639be151307feaeff3ff64fa3a15791707caa856e91920500dda117d471e5dc"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_study/minbias_injected_anomaly_procedure_general_clean.png",
+      "bytes": 205770,
+      "sha256": "88ef715b7d63ed1403cbab39501027a5e882b60bd6ef3fc798baffcf2003f3af"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_study/minbias_metric_procedure_with_latent_space_clean.png",
+      "bytes": 468646,
+      "sha256": "06f199b8ad5aa05830316bb4fd93efc0039e3ebe4ac021ddfaa5ea7a799e14ff"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_study/real_4class_100k_latent_pca_annotated.png",
+      "bytes": 760786,
+      "sha256": "69cc2b3ebde4516609993abaf6e93c0444bd0e87af1be19118d54465fa43f919"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_study/real_4class_100k_latent_pca_for_procedure.png",
+      "bytes": 907253,
+      "sha256": "705895ff0f8b5b9ebd6b814ff9535458c39099b0f8920b2772a74d2f3910fdaf"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_study/updated_scaling_axes_diagram.png",
+      "bytes": 363292,
+      "sha256": "70ffc0a8d9eb1409524f420f371e98f905774ba801ab2d16c00104c6ef5fdb59"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_study/updated_scaling_axes_diagram_centered.png",
+      "bytes": 389584,
+      "sha256": "baf27db9bad487d3bf177bce3018b228b66123722ae3829b040275278e067840"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_study/updated_scaling_axes_diagram_centered_no_ad.png",
+      "bytes": 425197,
+      "sha256": "7a0dd39be998e2d39834cba5456ea57ea7e679a52039984549a6cc548328f71d"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_study/updated_scaling_axes_diagram_final.png",
+      "bytes": 390490,
+      "sha256": "bc5c5c04469ed77613abd58a567fd0b3effdd9ecc5021455da382d6a9394db82"
+    },
+    {
+      "path": "docs/analysis/figures/scaling_study/updated_scaling_axes_diagram_final_injected_anomalies.png",
+      "bytes": 395744,
+      "sha256": "13dae8e42041f1709b62245a0e397ce5d25e3c52d109cbc5b46db2da115af6db"
+    },
+    {
+      "path": "docs/analysis/hh4b_collapse_diagnostics.md",
+      "bytes": 10716,
+      "sha256": "ed200c0e9c52f6190a28d568b16ecf0ae505125eb637382cc80ac082f332f9a6"
+    },
+    {
+      "path": "docs/analysis/hh4b_latent_dim_sweep.md",
+      "bytes": 4497,
+      "sha256": "8d224c3e61d39a6601ea576312036958ea2adaf1bd4980e35c446dfdc3a0957b"
+    },
+    {
+      "path": "docs/analysis/latent_collapse_report.md",
+      "bytes": 9614,
+      "sha256": "00ae196e73f93c8f73cd1ab967d5053edd5ad08e073f9bcfffad4ecb6c0d3ef0"
+    },
+    {
+      "path": "docs/analysis/mha_eval_quality_analysis.md",
+      "bytes": 6369,
+      "sha256": "b74bdb6fb176e28c0f618c40ea3ebdd41c790989c0af1a377cfd518eeedff4be"
+    },
+    {
+      "path": "docs/analysis/mha_l1_100k_eval_quality.md",
+      "bytes": 5527,
+      "sha256": "fbb9a44f8f75faf123c66e7d9c9b1915e4e4301218ea9ae5f879543020efa38a"
+    },
+    {
+      "path": "docs/analysis/quantization_readiness_and_anomaly_scores.md",
+      "bytes": 16866,
+      "sha256": "f4b1ab3c7b41e8d53c38d59211f3158aeb26213512ee4cab267d6542e940194a"
+    },
+    {
+      "path": "docs/analysis/scaling_analysis.md",
+      "bytes": 27465,
+      "sha256": "9a045d51f8b7c10576148f8ebdb4f7ce9319022c45c9180d04349c3575f0762f"
+    },
+    {
+      "path": "docs/analysis/scaling_axes_analysis.md",
+      "bytes": 17784,
+      "sha256": "d044d553d8daecb23bcd73734ed95ce57855a504d9c1e2ccd7295dc12e4d2057"
+    },
+    {
+      "path": "docs/analysis/superclass_loss_objective_comparison.md",
+      "bytes": 8532,
+      "sha256": "46c584af00d212e8d24dc69fb3edcea5ec3f871a3eb65cc34a0d05eec16ca637"
+    },
+    {
+      "path": "docs/analysis/top_pt_eta_fix.md",
+      "bytes": 6105,
+      "sha256": "945c66837902a66a87caabc731f278c72a79712a3ef3db5d34fb3372acc52179"
+    },
+    {
+      "path": "docs/analysis/updated_collide2v_run.md",
+      "bytes": 5270,
+      "sha256": "4cca237022ea7bec17a7a130aaf8606d9df940c02c2f4e1786d5e4402f42d95e"
+    },
+    {
+      "path": "docs/diagrams/README.md",
+      "bytes": 1171,
+      "sha256": "e67840ba885e4f0639606bc11d0259458099d2c7a323b50481639b341d176185"
+    },
+    {
+      "path": "docs/diagrams/ctl2_pipeline.mmd",
+      "bytes": 536,
+      "sha256": "3228310ff994ed6384d0eced7eb9649d17e0b5f3619046d5c589e7a0d61218b9"
+    },
+    {
+      "path": "docs/diagrams/ngt_100m_architecture.mmd",
+      "bytes": 842,
+      "sha256": "8c932dcb8a361c59eb036b53cbf29a514deac8f5180f2ff3ad4f5b53521dc227"
+    },
+    {
+      "path": "docs/diagrams/quantization_workflow.mmd",
+      "bytes": 659,
+      "sha256": "a5594db3acc262b5c942498e4ef0180cd208916d05070f3028dc20c64dc39cee"
+    },
+    {
+      "path": "docs/diagrams/repository_overview.mmd",
+      "bytes": 414,
+      "sha256": "7c51c0b876829700243514f0d4ae3225e7fa900388bf89a7d7fb9598d5a5143c"
+    },
+    {
+      "path": "docs/historical/ctl2_workflow_reference.md",
+      "bytes": 16319,
+      "sha256": "0a306d795a780753386bb801fa509e8319c04fe7d5f985ae53c720968f1c24e8"
+    },
+    {
+      "path": "docs/historical/ngt_workflow_reference.md",
+      "bytes": 9351,
+      "sha256": "3437627f52bbe06a876cc9cf8e604c369d450a12625f9b49df0ed8dc59426150"
+    },
+    {
+      "path": "docs/historical/overview_2026_08.md",
+      "bytes": 11480,
+      "sha256": "8e07adae9eab85ae07b7ce165a626bfbcd8f9487b7f86c7c1e5d155c79a5f932"
+    },
+    {
+      "path": "docs/reorganization_map.json",
+      "bytes": 4391,
+      "sha256": "f55f777b41c240b455055ac1f91a2a2919b6ba2f01b0d4dc734e253bd277cc4e"
+    },
+    {
+      "path": "docs/reports/NGT_Model_Technical_Report.md",
+      "bytes": 74096,
+      "sha256": "654f22769c20904ba8a5e2aa5b2491e9f5337e4f91b42bf4a6008d7d889d6579"
+    },
+    {
+      "path": "ngt_model/.gitignore",
+      "bytes": 115,
+      "sha256": "4a8a5a4df65b97ceb4876fbd083a6ad9c76e4c7c335d653924d70ba415fe2cbf"
+    },
+    {
+      "path": "ngt_model/README.md",
+      "bytes": 4060,
+      "sha256": "cca282668f4386576a98f53bb8169d746aec47ca71368fc0bb2196c56986e073"
+    },
+    {
+      "path": "ngt_model/conf/README.md",
+      "bytes": 730,
+      "sha256": "a94a2e539eb44cd20188dfa51af0868eff0a8e142ebf48c38e6289741b23dc12"
+    },
+    {
+      "path": "ngt_model/final_run/README.md",
+      "bytes": 1961,
+      "sha256": "4fd6a01cdd2ee54087b928dab2cec256c99466281e47c6fdccfffb104a163068"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_001/anomaly_score_distributions.png",
+      "bytes": 104426,
+      "sha256": "ee95c3a57b7f2ec0798860bfa6b4315a9321b8e40d21583bd7c50f68159c06f8"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_001/background_latent_tsne.png",
+      "bytes": 242035,
+      "sha256": "7576de6e1fa807afe5b17a01c2a98a191e5e3880c5600ea2fe8f68881adceb33"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_001/external_higgs_auc.png",
+      "bytes": 54779,
+      "sha256": "15a4e0285b380e006115f7cbe91c3fa2ceeb5b70aa91f8288ecf542f85c6f4fd"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_001/external_higgs_latent_pca.png",
+      "bytes": 410592,
+      "sha256": "25c2c3a138d16ad930f78708b071529a8388be8d2c487809b1567250becd5d0b"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_001/external_higgs_latent_tsne.png",
+      "bytes": 346405,
+      "sha256": "ded9fe420126b4980ff0ca44a3015c1ec7387341c2d8470f52d45f5309266778"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_001/external_higgs_run_metadata.json",
+      "bytes": 6489,
+      "sha256": "d63ca92145275ba7693f357edb4257f236fdfe307a0d5e66e1b343053e4805ab"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_001/external_higgs_summary.png",
+      "bytes": 223107,
+      "sha256": "d154ed531f6d6acd53f9a52879d021a695340b8314a4c51833b1f3ced3327092"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_001/minbias_control_gmm.png",
+      "bytes": 108670,
+      "sha256": "416bfd8fc9bda7cc2f3954d4d44ffdd72b5a8ec6b1fc0f5f16ec11a913ae97d3"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_001/minbias_control_overall.png",
+      "bytes": 107404,
+      "sha256": "e1ef010e5eb0e9bcf928effae18c455ef74577180ae3a5115f62e0a776561dac"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_002/anomaly_score_distributions.png",
+      "bytes": 100409,
+      "sha256": "f429b7c9b28c0c7b6d051395964f03f91866d5cf51c7468d252ae7d2640a7c01"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_002/background_latent_tsne.png",
+      "bytes": 251256,
+      "sha256": "1a978eff9891412c1e3fecf93bb745ad7dcc6c3ffad5c1d91aa3bb4785061e2e"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_002/external_higgs_auc.png",
+      "bytes": 55606,
+      "sha256": "c57ae2b3fa2d3e4ec0e1d6129e8394bc2709aee2f22f544f9e57655777f64ef5"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_002/external_higgs_latent_pca.png",
+      "bytes": 508419,
+      "sha256": "334cb40d3b8ef546f18bd516e98b517df7cd4ccfafe5f0abc33214b4e70d4dc9"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_002/external_higgs_latent_tsne.png",
+      "bytes": 373470,
+      "sha256": "5ceaa174869c205a9cd28a5b0c36dd07d5f74446439647e39a1cb04c43c43af6"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_002/external_higgs_run_metadata.json",
+      "bytes": 6508,
+      "sha256": "bf43989315b0a35fb8490081cd86b9e57190c91f2dd5e7e0c38a9b6d2c17d324"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_002/external_higgs_summary.png",
+      "bytes": 222229,
+      "sha256": "18b601ec132d63e9fba71817b56cc2c7c0fa6309dfbd746db364c09b3f7e446c"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_002/minbias_control_gmm.png",
+      "bytes": 110725,
+      "sha256": "3704b5044d71ff63373bf91fa7054c0c453bc1d6d7e395d197ec6e4660b83a2e"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_002/minbias_control_overall.png",
+      "bytes": 104836,
+      "sha256": "5d27732130ee508428312a7af5816e8f16aaf06779b68de140f135e041b3f5e5"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_003/anomaly_score_distributions.png",
+      "bytes": 99233,
+      "sha256": "b222ae73eddfe189ec93dc4842e75d1da3d84273f0cf8b514340f06eceda9e7f"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_003/background_latent_tsne.png",
+      "bytes": 261924,
+      "sha256": "73c79a8367baae6da0841bd0ba6d1eef5caa89ad9a3f4899784bbc889af795cf"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_003/external_higgs_auc.png",
+      "bytes": 56127,
+      "sha256": "8bfce82dc3aba7c3d56e8f7bab06088ca96470b13f4b16a733d755d616935172"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_003/external_higgs_latent_pca.png",
+      "bytes": 419652,
+      "sha256": "bd7374eecbb4c0aa4e0d5573e68c375a9daa21beac13a3aec12d31a85ed06bde"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_003/external_higgs_latent_tsne.png",
+      "bytes": 430771,
+      "sha256": "8e9975c3f131a623302d8414ca3abf14558da4e3ef4e78eda700479e23a53131"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_003/external_higgs_run_metadata.json",
+      "bytes": 6509,
+      "sha256": "c1cff8ee61800cd9da4eb569cdc3349a37b794d7490a6773452157eb8f35f9b0"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_003/external_higgs_summary.png",
+      "bytes": 219504,
+      "sha256": "be38d0dc5524058976e0ac35b16ebfc0655aa23c5816b72b90e34e837fab1e07"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_003/minbias_control_gmm.png",
+      "bytes": 110051,
+      "sha256": "eff81333a46e3c6c8f778ee4813cafb3f911e450821b3f9bb0569ef47d047d86"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_003/minbias_control_overall.png",
+      "bytes": 104241,
+      "sha256": "e2e121af27d05db9572c17e99eb7ed713d3379892c4c5d29b4ec451a746fb08c"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_004/anomaly_score_distributions.png",
+      "bytes": 101816,
+      "sha256": "09ad557d2f97cddd14d18d95b30b7a22460a92d9ea200fae9036d61281ea2325"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_004/background_latent_tsne.png",
+      "bytes": 263415,
+      "sha256": "3e65fe1d5fdcc126191dc7f2cd514fb79db4714541e24e32607ded7bafebeedf"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_004/external_higgs_auc.png",
+      "bytes": 55625,
+      "sha256": "336d02ae44ef23e12185dad20313218cb99f0de8300413dcefa33622eb564665"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_004/external_higgs_latent_pca.png",
+      "bytes": 508559,
+      "sha256": "fa85d246856e6c5f9f7911e0cc6c3d4f62ed830bbbd9eb58387e3b9960f68377"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_004/external_higgs_latent_tsne.png",
+      "bytes": 442450,
+      "sha256": "09a5eac8a71fab03d79a9dffca7f94b014b713003be7fef2d442aad31d5895f1"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_004/external_higgs_run_metadata.json",
+      "bytes": 6525,
+      "sha256": "4f4a5f8161a53055d3260d1b778564f6fcbbbe308f6877827ae943fe09edc678"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_004/external_higgs_summary.png",
+      "bytes": 220641,
+      "sha256": "2d74d5189f34124a56ddd91ca9b20128a896c890882aadcb62fee4378997bbee"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_004/minbias_control_gmm.png",
+      "bytes": 104933,
+      "sha256": "7a7fe9a07cd8a23f8547d4c25a88c9af1f22c1650bfbcbf83f518fa24c8e4309"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_004/minbias_control_overall.png",
+      "bytes": 103473,
+      "sha256": "90e4b785d4802e5fb5d61a0fd1bd0f8af2da411f59e4ff3b740e3827d9a86bbc"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_005/anomaly_score_distributions.png",
+      "bytes": 98568,
+      "sha256": "92fd73f7317f692282d3066a13406d215581be5500005101736b8be430d61b29"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_005/background_latent_tsne.png",
+      "bytes": 261539,
+      "sha256": "1e9248bfb52b60d3671df921178baab962fd8ade06ea1ec1ff4124821ee5a113"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_005/external_higgs_auc.png",
+      "bytes": 55004,
+      "sha256": "3c27f7fabffef936203d336b4fe279cc823ec5a4a2cd07cba656db43f2138543"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_005/external_higgs_latent_pca.png",
+      "bytes": 396693,
+      "sha256": "afa06cc3dd42b892e58c5d1e240e1b47967c27fa5bfdb04bb5533d4db802e49a"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_005/external_higgs_latent_tsne.png",
+      "bytes": 442202,
+      "sha256": "7019b701d15c01ccebf69e4a889e833246ce347bbca2cad7e920fed16f4ce6e4"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_005/external_higgs_run_metadata.json",
+      "bytes": 6492,
+      "sha256": "e9746dedb7c4393e12983fa16f63a45d7eada709d1c8075d459a0410dc74fc28"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_005/external_higgs_summary.png",
+      "bytes": 218248,
+      "sha256": "a575e5d1bcb451df8bf8e251bb953039cf3123f98846c7ab41c5ea453d11f46a"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_005/minbias_control_gmm.png",
+      "bytes": 102739,
+      "sha256": "9b0bdc2ca11728cead626a064780f21ca169e01472506b4370650c6a56a74455"
+    },
+    {
+      "path": "ngt_model/final_run/figures/anomaly_injection_epoch_005/minbias_control_overall.png",
+      "bytes": 102143,
+      "sha256": "c91b9f5c1a9c575ab23d40afe38279ce662c12e34c16237d0b02aa97f4f875ac"
+    },
+    {
+      "path": "ngt_model/final_run/figures/event_loss_concentration/ce_vs_supcon_epoch_first_last.png",
+      "bytes": 205434,
+      "sha256": "ad10a082eca9e35b773f86c67bdee22cdae6485de286caa0f251f665c5843d75"
+    },
+    {
+      "path": "ngt_model/final_run/figures/event_loss_concentration/event_loss_sample_metadata.json",
+      "bytes": 1827,
+      "sha256": "fcbf91f183a72b77d781267d52eb57a5ff063e34f69b6209a25f6afcffca7655"
+    },
+    {
+      "path": "ngt_model/final_run/figures/event_loss_concentration/event_loss_summary.png",
+      "bytes": 181604,
+      "sha256": "ba44a19aa81357352c60792c45fbc2e550d72220a797a700e72054097c6e611c"
+    },
+    {
+      "path": "ngt_model/final_run/figures/event_loss_concentration/event_loss_summary_by_epoch.csv",
+      "bytes": 2147,
+      "sha256": "70375fb2e07207ecfd8f85674e0be5031097596f2ed431cdef00d4bcad47b9c5"
+    },
+    {
+      "path": "ngt_model/final_run/figures/event_loss_concentration/hard_event_overlap.csv",
+      "bytes": 708,
+      "sha256": "3f0c20dc6c5c2837932816abc156f4ff62ad55d595003f4a458631e7ddd2fa6e"
+    },
+    {
+      "path": "ngt_model/final_run/figures/event_loss_concentration/hard_event_overlap.png",
+      "bytes": 146459,
+      "sha256": "15f17f0af9220a3faca3dfb6679428a2703c76acbca3aa47e572df681095fe91"
+    },
+    {
+      "path": "ngt_model/final_run/figures/event_loss_concentration/loss_concentration_by_epoch.png",
+      "bytes": 130923,
+      "sha256": "a75d4645547c8bf7fdca3f1e0fcc6254a1585659ac6ac0029fb2de376d1b59a3"
+    },
+    {
+      "path": "ngt_model/final_run/figures/event_loss_concentration/loss_distribution_by_epoch.png",
+      "bytes": 83616,
+      "sha256": "3a3fe180a5f4935f9602ed05d2092ab72d2648662a0d332e04ba18f9248618e7"
+    },
+    {
+      "path": "ngt_model/final_run/figures/event_loss_concentration/top5pct_loss_class_composition.png",
+      "bytes": 41894,
+      "sha256": "3e2a0f9020395fed0e23da3eedde6fc27fb0394e2d5dfbabd37206108790f3d3"
+    },
+    {
+      "path": "ngt_model/final_run/figures/latent_evolution/latent_centroid_trajectory.png",
+      "bytes": 84875,
+      "sha256": "56ee8216273956a05f9e9fb7f15b549011dd4a997793b58ddf40716aba1bb6b8"
+    },
+    {
+      "path": "ngt_model/final_run/figures/latent_evolution/latent_evolution_metrics.png",
+      "bytes": 195960,
+      "sha256": "4729c15c2a0aa97c7b30214307c769334aae3db4b9a08242d3d5695e3ea92170"
+    },
+    {
+      "path": "ngt_model/final_run/figures/latent_evolution/latent_evolution_summary.csv",
+      "bytes": 1285,
+      "sha256": "30d43159211e7df2b462ab29a0cd900641d1466656aef9c7ff70f5f22eff55cc"
+    },
+    {
+      "path": "ngt_model/final_run/figures/latent_evolution/latent_evolution_summary.json",
+      "bytes": 2970,
+      "sha256": "4309231ff813e6fd3a6a50aceefcabc07cb7e76b6d93acf82df6f020eb47e74e"
+    },
+    {
+      "path": "ngt_model/final_run/figures/latent_evolution/latent_pca_by_epoch.png",
+      "bytes": 278693,
+      "sha256": "3b8fc68011e025d9efd63bcf11186773c76e5971cb73885dbc10bd23f53f0d77"
+    },
+    {
+      "path": "ngt_model/final_run/figures/latent_evolution/latent_sample_metadata.json",
+      "bytes": 1791,
+      "sha256": "9d66f4d6ed25817c21ef6ba4c98a7a1f24b436f199f60ace3d054e7c98f87362"
+    },
+    {
+      "path": "ngt_model/final_run/models/checkpoint_epoch_004.pt",
+      "bytes": 399573270,
+      "sha256": "f04f026f79b28ee794cef05b09cce5d97f726d9269c56e9ad788214517935cb8"
+    },
+    {
+      "path": "ngt_model/final_run/run_config.json",
+      "bytes": 3322,
+      "sha256": "863fbc0355ab4ce4eda73c3a859a7af8fb7000ecc4cc368e7411a58a7f4fc62a"
+    },
+    {
+      "path": "ngt_model/final_run/training_history.csv",
+      "bytes": 1719,
+      "sha256": "6b4c91134c6abb7d85ac1690f4fbb8a081f4481de35780dead823210a10ab362"
+    },
+    {
+      "path": "ngt_model/pyproject.toml",
+      "bytes": 528,
+      "sha256": "10b3cc94077d9c3431fd2f0ea26b10f905ce6d07cac637d19bcdfe3c7fd1bf80"
+    },
+    {
+      "path": "ngt_model/requirements.txt",
+      "bytes": 143,
+      "sha256": "fbcfd990df7ce64129a32b164a2183e5f178b2b8389b5302319f9fee6cf928c6"
+    },
+    {
+      "path": "ngt_model/scaling_study/README.md",
+      "bytes": 9598,
+      "sha256": "440a6a58cb49ce0bb5f65e97f9153c00ee8d60846dfd1ce8879c0f7d30d625cb"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/ONE_24H_RUNBOOK.md",
+      "bytes": 7581,
+      "sha256": "c81a7452fcc8685f1bdd28a08946580d1e4ebec5bfc0df88beee2cf9f2cb2d8d"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/README.md",
+      "bytes": 6169,
+      "sha256": "2e901d797d5ca34ee526d83ba2a8432b8e639099e987d7d95b1d53547680f180"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/benchmark_100m_ddp_results.csv",
+      "bytes": 1533,
+      "sha256": "d994bbe2a60d1faa260e378dfde94deac66b15aa1d5f235d2fad9464ac7eb0b9"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/benchmark_analysis.md",
+      "bytes": 3285,
+      "sha256": "8231d50439b36825c50bcd99ff39b0960bd5d22a24f2276f39108f077ac91465"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/commands/analyze_event_loss_concentration_100m.py",
+      "bytes": 24106,
+      "sha256": "eae6bd3ffdc6648abdad1e6d685a76af4fa1103233ee1d96ec40954706040200"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/commands/analyze_event_loss_concentration_100m.sh",
+      "bytes": 698,
+      "sha256": "880623c854347675b8d6432a3079bdd62d6eec28b8957abb32b8b2ff3b49a1f4"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/commands/benchmark_100m_ddp.py",
+      "bytes": 7227,
+      "sha256": "bdb402970609453c03ab593dc8394ea62677c8802c4fddd1f66128d802d3d350"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/commands/evaluate_anomaly_injection_by_epoch_100m.sh",
+      "bytes": 1423,
+      "sha256": "7983d10f47999df86dfc0669aecf88f027acd1029bfd0a8e6caf17f27d6cc00e"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/commands/evaluate_external_higgs.sh",
+      "bytes": 637,
+      "sha256": "5d23c536ccadd7fa3ad35d7e7f792eefcb325d666494998c60a8e421eaabf5d7"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/commands/launch_one_24h_100m.sh",
+      "bytes": 1768,
+      "sha256": "e62fb8962c2ef54de4407f987adcb882b9a0fdb8c50cd6d01b8b2ae6d9c5ca2a"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/commands/launch_one_24h_100m_ce_infonce.sh",
+      "bytes": 1849,
+      "sha256": "b7e7eb203b64b9f01d5045cc23206697e469ab521aa37dbae106a40d7767e02f"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/commands/launch_one_24h_100m_safe_ce.sh",
+      "bytes": 1754,
+      "sha256": "fedf16198d31c72b9cfb895d67eda8401632e6c5b00e8ea5bf23164b2bbb420a"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/commands/launch_torchrun_100m_80m.sh",
+      "bytes": 1311,
+      "sha256": "c92483ec2c80794cb7c1840927f0b04f5159ab76e8d89fa9530f7aa2353914f2"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/commands/plot_anomaly_injection_evolution_100m.py",
+      "bytes": 2853,
+      "sha256": "141dfd5110b6c64b13bb1d64de3e4832a4d95cc2441f49cc20f21642a74cb522"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/commands/plot_latent_evolution_100m.py",
+      "bytes": 14718,
+      "sha256": "5e065d215e18b235f1ec20a8673a7cd8fe1c708d82d68e892f91f3a02ea5e7e3"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/commands/plot_latent_evolution_100m.sh",
+      "bytes": 655,
+      "sha256": "8312412fee5009121257e096b93b97f71c3047d73917cda4af2b277a0f97cc1a"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/commands/resume_one_24h_100m_ce_infonce_from_checkpoint.sh",
+      "bytes": 2122,
+      "sha256": "ae00b24d93c6dcf217e2782db5bca5d6f9c3d273f488cee1feb6136e882bd98a"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/commands/resume_one_24h_100m_safe_ce_from_epoch1.sh",
+      "bytes": 2172,
+      "sha256": "3faaef45be9c6aedade2e883229a491787c72314ef516017f0a5e2d864f3b8c9"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/commands/run_one_24h_benchmark.sh",
+      "bytes": 617,
+      "sha256": "8d2a500d80a123982fc50c6252ce0b9ac4e7a633c0d1de51ff426433acc17f54"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/commands/run_one_24h_smoke_1k.sh",
+      "bytes": 1350,
+      "sha256": "29aad919da5cc13ca4775ca37775412307b135be771911ddbfa3724163ac11e0"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/commands/smoke_tests.sh",
+      "bytes": 1415,
+      "sha256": "cf03cc987a433c79b6cd62fef02656f21a1bb5b76415ec327bb0e9fe5c7ecafd"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/configs/one_24h_100m_config.json",
+      "bytes": 1975,
+      "sha256": "708510498fca78bafa701c5333ce06c77f504c67768dd19a147c34f8e270e560"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/configs/run_100m_80m_A.json",
+      "bytes": 1124,
+      "sha256": "89e619b2b9239ac330b945268a4dc909b11a263c8bc87f7b7645d32784c0cd1c"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/configs/run_100m_80m_B.json",
+      "bytes": 1124,
+      "sha256": "876e62ea3673a8cd7956f5f2b1d2ccc03f11b7498d5df3a36fdc3b090b20b171"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/kubeflow/pytorchjob_run_100m_80m_A.yaml",
+      "bytes": 1211,
+      "sha256": "4806cb6030d9fc898c5d464782a6b605e9a5eaa91bbfa7aa88313b28999abfe3"
+    },
+    {
+      "path": "ngt_model/scaling_study/large_100m_80m/kubeflow/pytorchjob_run_100m_80m_B.yaml",
+      "bytes": 1211,
+      "sha256": "9d48fdbf92c9793f51abdcabc04ec51e61e70ba07b0fe266c8d9e3a1dae21c53"
+    },
+    {
+      "path": "ngt_model/scaling_study/main_4class_scaling/README.md",
+      "bytes": 2667,
+      "sha256": "007c2237cc8a7de1d97f75f1fee21520dd7525ed35dbe594a62ae9ee5e71fca9"
+    },
+    {
+      "path": "ngt_model/scaling_study/manifests/scaling_study_commands.sh",
+      "bytes": 18416,
+      "sha256": "14645f0d1728e10ee43f407f66754ef5cb28f34a8b95d2ea17ef6a14ff23845b"
+    },
+    {
+      "path": "ngt_model/scaling_study/manifests/scaling_study_manifest.csv",
+      "bytes": 19368,
+      "sha256": "ad09506e321e510f5089025fb662c2e521adcbba786f272680a2ca6ba8ebbd76"
+    },
+    {
+      "path": "ngt_model/scaling_study/manifests/scaling_study_manifest.json",
+      "bytes": 22883,
+      "sha256": "cccc9359e5f9cec1169835b67192124039295f4b6823ca138094d9f4567eb7b0"
+    },
+    {
+      "path": "ngt_model/scaling_study/power_law_param_sample/README.md",
+      "bytes": 2899,
+      "sha256": "a28a41355eae10ba1ffe222bf6b453dbb5a55c699cfbc60b709efd3aff7345f3"
+    },
+    {
+      "path": "ngt_model/scaling_study/power_law_param_sample/commands/collect_and_fit_power_law.py",
+      "bytes": 4509,
+      "sha256": "5d0a581863ba006558b26131317980292362b6f60514113da49aea9a6db768ca"
+    },
+    {
+      "path": "ngt_model/scaling_study/power_law_param_sample/commands/run_power_law_sweep.sh",
+      "bytes": 1909,
+      "sha256": "6bf64486b1361c6d76617a16be2e596f130c983597aa3055a0dc5f168099566c"
+    },
+    {
+      "path": "ngt_model/scaling_study/power_law_param_sample/power_law_manifest.csv",
+      "bytes": 1267,
+      "sha256": "84654263bc36fdff01a6f0012ea382c63c24744d57142290193041d4a6f42c1e"
+    },
+    {
+      "path": "ngt_model/scaling_study/power_law_param_sample/power_law_manifest.json",
+      "bytes": 2776,
+      "sha256": "d0a0e9e2423e84cd6054506b715c3bc52f8bdd1fec264e83736e5ed5cea712f5"
+    },
+    {
+      "path": "ngt_model/scaling_study/power_law_param_sample/summaries/power_law_fits.json",
+      "bytes": 2173,
+      "sha256": "c4bb02dda243c6164e4733a48f638a0978d517876ab99b2a63fc73422661bf8d"
+    },
+    {
+      "path": "ngt_model/scaling_study/power_law_param_sample/summaries/power_law_results.csv",
+      "bytes": 2139,
+      "sha256": "2f81ec955ccde03b8c8dd7f91d27b68653ff7218aa4e625a29971a39df99225a"
+    },
+    {
+      "path": "ngt_model/scaling_study/probe_ablation/scaling_study_commands.sh",
+      "bytes": 7137,
+      "sha256": "bd6b7cbcb1604c0f9b5946cd9f7a6b3275e694024c7282643de83d8bf3fe0e25"
+    },
+    {
+      "path": "ngt_model/scaling_study/probe_ablation/scaling_study_manifest.csv",
+      "bytes": 7492,
+      "sha256": "7602796a8e0fde63d6709a2a38d071c1fdc2a69df32c535f500ee76a59538b3f"
+    },
+    {
+      "path": "ngt_model/scaling_study/probe_ablation/scaling_study_manifest.json",
+      "bytes": 8581,
+      "sha256": "fead13a9ac82bc1e4a3d467dc11825486d48f51263cbfc6ecf386a3fe9ddf9ad"
+    },
+    {
+      "path": "ngt_model/scaling_study/summaries/main_4class_scaling_minbias_summary.csv",
+      "bytes": 2514,
+      "sha256": "6fc5d7b18bb0a226dcf93466d6af5f70786423ea1bd3dcbaadca581a9dec51f2"
+    },
+    {
+      "path": "ngt_model/scaling_study/summaries/master_results_table.csv",
+      "bytes": 466,
+      "sha256": "c8efb43d9bdc561441879fbd97949b7338b6dc664cdbebb719ee58e9c762dce1"
+    },
+    {
+      "path": "ngt_model/scaling_study/summaries/probe_ablation_summary.csv",
+      "bytes": 983,
+      "sha256": "2a1c2608cde3223cd93c6c9deb0804b7f23b4c32fd0ab35d31051eca4f380d1e"
+    },
+    {
+      "path": "ngt_model/src/ngt_model/datasets/collide2v_data.py",
+      "bytes": 35950,
+      "sha256": "1901173ddb455737c882675b3a2bbef77dcf255e06016260dbcf76bee9ab895c"
+    },
+    {
+      "path": "ngt_model/src/ngt_model/evaluation/dataset_size_sweep.py",
+      "bytes": 7388,
+      "sha256": "5b105dacd626a33c2502bf0b1e206f0142d661feb58693eb65d4a4816525b885"
+    },
+    {
+      "path": "ngt_model/src/ngt_model/evaluation/eval_quality.py",
+      "bytes": 24148,
+      "sha256": "459618e746c5069404cb9a09d8114c6fb10aa07c82147bf20a0fbc8663ef0665"
+    },
+    {
+      "path": "ngt_model/src/ngt_model/evaluation/eval_quality_collide2v.py",
+      "bytes": 17256,
+      "sha256": "06e88985f2a974436959cbb7959855e31f9b08135d32f6c946b9c7648cfe1daf"
+    },
+    {
+      "path": "ngt_model/src/ngt_model/evaluation/external_classifier_response.py",
+      "bytes": 12968,
+      "sha256": "86ad625aff235bac94ad369d4419453f2588e21c534c8e9200895c4402390ea4"
+    },
+    {
+      "path": "ngt_model/src/ngt_model/evaluation/external_higgs_anomaly.py",
+      "bytes": 74993,
+      "sha256": "2e66ea292ea0aeaaa0eee474a8a9ba036d7e84ce4b72acfaaeac46eb4cbe6dc2"
+    },
+    {
+      "path": "ngt_model/src/ngt_model/models/mha_model.py",
+      "bytes": 6464,
+      "sha256": "c01c442819b260559cb375b7ee4357c036ffc78eb25bb6c92f39ac99781b7a89"
+    },
+    {
+      "path": "ngt_model/src/ngt_model/pipelines/scaling_study_collect_results.py",
+      "bytes": 5987,
+      "sha256": "01f16bd8d8b8bad08af7dfe9cd85c768036457e09e629f00bbc7900d4cd88fbc"
+    },
+    {
+      "path": "ngt_model/src/ngt_model/pipelines/scaling_study_manifest.py",
+      "bytes": 16128,
+      "sha256": "6277c720ebce4b617a2ab6781336ef270bd0966108b7413f56be012080bf2891"
+    },
+    {
+      "path": "ngt_model/src/ngt_model/training/train_mha.py",
+      "bytes": 54037,
+      "sha256": "602b2d7f2a1c4ce4581142ec9a31caf6ebdad12513e03a54264c69dc62792f53"
+    },
+    {
+      "path": "quantized_model/README.md",
+      "bytes": 9687,
+      "sha256": "ad462420862b15b1e49e760703b7f7595a0ed25a2fa1679a25c1b3fddb9b3c46"
+    },
+    {
+      "path": "quantized_model/conf/base/source_run_config.json",
+      "bytes": 3322,
+      "sha256": "863fbc0355ab4ce4eda73c3a859a7af8fb7000ecc4cc368e7411a58a7f4fc62a"
+    },
+    {
+      "path": "quantized_model/evidence/cohort_provenance.json",
+      "bytes": 1612,
+      "sha256": "0c1ff694de07058b30321a69d797bba07cd3010d9f48f0f3605d3d855a622388"
+    },
+    {
+      "path": "quantized_model/evidence/comparison.json",
+      "bytes": 7770,
+      "sha256": "c988348305323323812130684c7769b1b309e2ab877b89dfe1a1cf945de4a67e"
+    },
+    {
+      "path": "quantized_model/evidence/conversion_manifest.json",
+      "bytes": 5302,
+      "sha256": "3dbbc4939e75670457eaaada3a84466a8938dc19f05f65d0144cfeffff8b0695"
+    },
+    {
+      "path": "quantized_model/evidence/layer_sensitivity.json",
+      "bytes": 4305,
+      "sha256": "f544e99086f8ba73d2e10269df5aba11285a8195f35f98c752c395889e81b47f"
+    },
+    {
+      "path": "quantized_model/evidence/rejected_dense_int8_comparison.json",
+      "bytes": 7627,
+      "sha256": "0bed0421bc4e413662e8c3354573c0a50c8b3673b4deb6ba93237e805ea48acc"
+    },
+    {
+      "path": "quantized_model/evidence/runtime.json",
+      "bytes": 444,
+      "sha256": "4477c61409988a383b96321639aa7a81fb18e535fdc78e7e012de6664b6f8b70"
+    },
+    {
+      "path": "quantized_model/models/ngt_100m_epoch004_postpool_int8.pt",
+      "bytes": 302201316,
+      "sha256": "208c7063ecd9c4c03c8131a6000ad0572959cd053a34b247a76f023c1f371f2e"
+    },
+    {
+      "path": "quantized_model/pyproject.toml",
+      "bytes": 386,
+      "sha256": "eb436c8037982a2c0ebc29b0ec3b674e0fd560cff753972b6520f76410dce7a0"
+    },
+    {
+      "path": "quantized_model/requirements.txt",
+      "bytes": 121,
+      "sha256": "9103c3aa291a9c8a687361cb027b9a7e36805f9b4307fd5829203c84aebd56a4"
+    },
+    {
+      "path": "quantized_model/src/quantized_model/__init__.py",
+      "bytes": 107,
+      "sha256": "fe44f3dfa1aa67e80135705f88353fb2db200e1e38e9252913536d6927c101db"
+    },
+    {
+      "path": "quantized_model/src/quantized_model/compare.py",
+      "bytes": 8230,
+      "sha256": "d9dcd1e9812fb6fad5dddb3f9f34402bc238800feec3461b39f15c9b50f81729"
+    },
+    {
+      "path": "quantized_model/src/quantized_model/convert.py",
+      "bytes": 3946,
+      "sha256": "b3a97c10cab1dc44c54b1597e2886b9d87a43c70aff281209ff888bed29d3066"
+    },
+    {
+      "path": "quantized_model/src/quantized_model/core.py",
+      "bytes": 6421,
+      "sha256": "68a79206d52e5527e44d923223e6ffeea281fa5797822c86a723bbb0d58d796d"
+    },
+    {
+      "path": "quantized_model/src/quantized_model/predict.py",
+      "bytes": 1297,
+      "sha256": "759204c64efc895c862e4c10dc23ad93d1a3e44279786edfeb5546d0672b49f3"
+    },
+    {
+      "path": "quantized_model/src/quantized_model/prepare_comparison.py",
+      "bytes": 2253,
+      "sha256": "d959ef0200269c15bd4cc90c3ad601e420fa83a66424117c228c79dc7ad3da9a"
+    },
+    {
+      "path": "quantized_model/src/quantized_model/prepare_holdout.py",
+      "bytes": 3614,
+      "sha256": "bea3ac75f54a9c5ced4c0bf1a532524e9d8d3f97d9ed625971594797931451ef"
+    },
+    {
+      "path": "quantized_model/src/quantized_model/sensitivity.py",
+      "bytes": 2388,
+      "sha256": "25dc6c41087ce6daa29d207133788673ae0c8efdd566a2b69ade865c991cc6f3"
+    },
+    {
+      "path": "quantized_model/tests/test_quantization.py",
+      "bytes": 4481,
+      "sha256": "1ea6e6a5c83d6d2618766f332c6ea3d1ef80cf65e4b0326d4db78efc1239a338"
+    }
+  ]
+}

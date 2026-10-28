@@ -7,3 +7,9 @@ __pycache__/
 .env
 .env.*
 !.env.example
+
+# Generated inference/training artifacts
+outputs/
+*.log
+build/
+dist/

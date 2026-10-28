@@ -1,0 +1,138 @@
+{
+  "scope": "Local delivery worktree only; original research workspace preserved",
+  "publication": "authorized after README review and successful local checks",
+  "moves": [
+    {
+      "from": "ctl2_embedding_model/ngt_model",
+      "to": "ngt_model"
+    },
+    {
+      "from": "ctl2_embedding_model/quantized_model",
+      "to": "quantized_model"
+    },
+    {
+      "from": "ctl2_embedding_model/ctl2_model",
+      "to": "ctl2_model"
+    },
+    {
+      "from": "ctl2_embedding_model/scaling_study",
+      "to": "ngt_model/scaling_study"
+    },
+    {
+      "from": "ctl2_embedding_model/analysis",
+      "to": "docs/analysis"
+    },
+    {
+      "from": "ctl2_embedding_model/scientific_report",
+      "to": "docs/reports"
+    },
+    {
+      "from": "ctl2_embedding_model/presentations",
+      "to": "docs/presentations"
+    },
+    {
+      "from": "ctl2_embedding_model/diagnostic_notebooks",
+      "to": "archive/diagnostic_notebooks"
+    },
+    {
+      "from": "ctl2_embedding_model/ngt_linformer_nodes_aligned_outputs",
+      "to": "archive/ngt_linformer_nodes_aligned_outputs"
+    },
+    {
+      "from": "ctl2_embedding_model/ngt_mha_nodes_aligned_outputs",
+      "to": "archive/ngt_mha_nodes_aligned_outputs"
+    },
+    {
+      "from": "ctl2_embedding_model/eval_quality.py",
+      "to": "archive/eval_quality.py"
+    },
+    {
+      "from": "ctl2_embedding_model/.gitignore",
+      "to": "archive/.gitignore"
+    },
+    {
+      "from": "ctl2_embedding_model/.gitlab-ci.yml",
+      "to": "docs/ci/ctl2_training_pipeline.yml"
+    },
+    {
+      "from": "ctl2_embedding_model/README.md",
+      "to": "archive/workspace_overview_before_reorganization.md"
+    },
+    {
+      "from": "docs/historical_overview_2026_08.md",
+      "to": "docs/historical/overview_2026_08.md"
+    },
+    {
+      "from": "DELIVERY.md",
+      "to": "docs/DELIVERY.md"
+    },
+    {
+      "from": "DELIVERY_INVENTORY.json",
+      "to": "docs/DELIVERY_INVENTORY.previous-layout.json"
+    },
+    {
+      "from": "ngt_model/README.md",
+      "to": "docs/historical/ngt_workflow_reference.md"
+    },
+    {
+      "from": "docs/analysis/2026-07-01_baseline_1k_100k.md",
+      "to": "archive/analysis/2026-07-01_baseline_1k_100k.md"
+    },
+    {
+      "from": "docs/analysis/2026-07-02_03_dy_minbias_followups.md",
+      "to": "archive/analysis/2026-07-02_03_dy_minbias_followups.md"
+    },
+    {
+      "from": "docs/analysis/2026-07-06_top_pt_eta_fix.md",
+      "to": "archive/analysis/2026-07-06_top_pt_eta_fix.md"
+    },
+    {
+      "from": "docs/analysis/2026-07-08_dy_minbias_latent_space.md",
+      "to": "archive/analysis/2026-07-08_dy_minbias_latent_space.md"
+    },
+    {
+      "from": "docs/analysis/2026-07-09_dataset_diagnostics_and_runs.md",
+      "to": "archive/analysis/2026-07-09_dataset_diagnostics_and_runs.md"
+    },
+    {
+      "from": "docs/analysis/2026-07-11_updated_collide2v_run.md",
+      "to": "archive/analysis/2026-07-11_updated_collide2v_run.md"
+    },
+    {
+      "from": "docs/analysis/2026-07-13_mha_eval_quality_analysis.md",
+      "to": "archive/analysis/2026-07-13_mha_eval_quality_analysis.md"
+    },
+    {
+      "from": "docs/analysis/2026-07-14_mha_l1_100k_eval_quality.md",
+      "to": "archive/analysis/2026-07-14_mha_l1_100k_eval_quality.md"
+    },
+    {
+      "from": "docs/analysis/2026-07-16_hh4b_latent_dim_sweep.md",
+      "to": "archive/analysis/2026-07-16_hh4b_latent_dim_sweep.md"
+    },
+    {
+      "from": "docs/analysis/2026-07-21_hh4b_collapse_diagnostics.md",
+      "to": "archive/analysis/2026-07-21_hh4b_collapse_diagnostics.md"
+    },
+    {
+      "from": "docs/analysis/2026-07-24_latent_collapse_report.md",
+      "to": "archive/analysis/2026-07-24_latent_collapse_report.md"
+    },
+    {
+      "from": "docs/analysis/2026-07-28_best_config_finding_and_latent_sweep.md",
+      "to": "archive/analysis/2026-07-28_best_config_finding_and_latent_sweep.md"
+    },
+    {
+      "from": "docs/analysis/2026-07-31_superclass_loss_objective_comparison.md",
+      "to": "archive/analysis/2026-07-31_superclass_loss_objective_comparison.md"
+    },
+    {
+      "from": "docs/analysis/2026-08-06_external_higgs_signal_evaluation.md",
+      "to": "archive/analysis/2026-08-06_external_higgs_signal_evaluation.md"
+    },
+    {
+      "from": "docs/DELIVERY_INVENTORY.previous-layout.json",
+      "to": "docs/historical/delivery_inventory_before_reorganization.json"
+    }
+  ]
+}

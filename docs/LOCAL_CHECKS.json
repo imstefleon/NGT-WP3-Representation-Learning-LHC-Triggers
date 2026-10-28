@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-28",
+  "publication": "authorized by user after documentation review and successful local checks",
+  "organization": {
+    "projects": [
+      "ngt_model",
+      "quantized_model",
+      "ctl2_model"
+    ],
+    "documentation": "docs",
+    "historical_outputs": "archive",
+    "original_research_workspace": "preserved"
+  },
+  "verification": {
+    "functional_tests_passed": 5,
+    "shell_scripts_syntax_checked": 16,
+    "ngt_model_wheel_build": "passed",
+    "quantized_model_wheel_build": "passed",
+    "current_navigation_links": "passed",
+    "model_artifact_sha256": "unchanged after reorganization",
+    "ctl2_source_and_environment": "preserved; training/synthesis not executed",
+    "mermaid": {
+      "mermaid_version": "11.4.1",
+      "diagrams_parsed": 14,
+      "syntax": "passed",
+      "scope": "All .mmd sources and fenced Mermaid blocks in Markdown"
+    },
+    "readme_navigation": "current project and documentation links passed"
+  },
+  "gitlab": {
+    "target_branch": "cern-final-2026-10-28",
+    "merge_target": "master",
+    "remote_validation": "Consult the GitLab branch pipeline; local checks are recorded separately"
+  }
+}
